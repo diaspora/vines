@@ -1,7 +1,6 @@
 .DS_Store
 .bundle
-.ruby-version
-Gemfile.lock
 pkg
 *.gem
 _site
+vendor/

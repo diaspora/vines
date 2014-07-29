@@ -1,0 +1,5 @@
+language: ruby
+script: "rake test"
+rvm:
+- 2.0.0
+- 1.9.3
