@@ -1,4 +1,4 @@
-require 'active_record'
+# encoding: UTF-8
 
 module Vines
   class Storage
