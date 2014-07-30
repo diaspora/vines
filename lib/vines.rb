@@ -62,6 +62,7 @@ rescue LoadError
 end
 
 %w[
+  active_record
   base64
   bcrypt
   digest/sha1
