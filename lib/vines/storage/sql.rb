@@ -55,7 +55,10 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.password = xuser.username, xuser.authentication_token
+          user.name, user.password, user.token =
+            xuser.username,
+            xuser.encrypted_password,
+            xuser.authentication_token
 
           xuser.contacts.each do |contact|
             handle = contact.person.diaspora_handle
@@ -91,7 +94,7 @@ module Vines
         hash = BCrypt::Engine.hash_secret("#{password}#{Config.instance.pepper}", dbhash.salt) rescue nil
 
         userAuth = ((hash && dbhash) && hash == dbhash)
-        tokenAuth = ((password && user.password) && password == user.password)
+        tokenAuth = ((password && user.token) && password == user.token)
         (tokenAuth || userAuth)? user : nil
       end
 

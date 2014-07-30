@@ -21,6 +21,7 @@ module Vines
     end
 
     def initialize(&block)
+      @pepper = "" # no pepper set
       @certs = File.expand_path('conf/certs')
       @vhosts, @ports, @cluster = {}, {}, nil
       @null = Storage::Null.new
@@ -47,7 +48,7 @@ module Vines
     end
 
     def pepper(pepper=nil)
-      pepper ? @pepper = pepper : @pepper = ""
+      pepper ? @pepper = pepper : @pepper
     end
 
     def domain_name

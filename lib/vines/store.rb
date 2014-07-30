@@ -88,11 +88,6 @@ module Vines
     def files_for_domain(domain)
       crt = File.expand_path("#{domain}.crt", @dir)
       key = File.expand_path("#{domain}.key", @dir)
-      # diaspora keys will be prioritized
-      if defined?(AppConfig)
-        crt = AppConfig.server.chat.certificate 
-        key = AppConfig.server.chat.key
-      end
       return [crt, key] if File.exists?(crt) && File.exists?(key)
 
       # might be a wildcard cert file
