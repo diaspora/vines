@@ -27,7 +27,7 @@ module Vines
         belongs_to :users
         belongs_to :person
 
-        has_many :aspect_memberships, :order => 'aspect_id ASC'
+        has_many :aspect_memberships
         has_many :aspects, :through => :aspect_memberships
       end
 
