@@ -3,17 +3,37 @@
 module Vines
   class Storage
     class Sql < Storage
+      include Vines::Log
+
       register :sql
 
       class Person < ActiveRecord::Base; end
+      class Aspect < ActiveRecord::Base
+        belongs_to :users
+
+        has_many :aspect_memberships
+        has_many :contacts
+      end
+
+      class AspectMembership < ActiveRecord::Base
+        belongs_to :aspect
+        belongs_to :contact
+      
+        has_one :users, :through => :contact
+        has_one :person, :through => :contact
+      end
+
       class Contact < ActiveRecord::Base
-        belongs_to :user
+        belongs_to :users
         belongs_to :person
+
+        has_many :aspect_memberships
+        has_many :aspects, :through => :aspect_memberships
       end
 
       class User < ActiveRecord::Base
-        has_many :contacts#, through: :user_id
-        has_many :contact_people, :through => :contacts, :source => :person
+        has_many :contacts
+
         has_one :person, :foreign_key => :owner_id
       end
 
@@ -61,27 +81,10 @@ module Vines
             xuser.authentication_token
 
           xuser.contacts.each do |contact|
-            handle = contact.person.diaspora_handle
-            ask = 'none'
-            subscription = 'none'
-
-            if contact.sharing && contact.receiving
-              subscription = 'both'
-            elsif contact.sharing && !contact.receiving
-              ask = 'suscribe'
-              subscription = 'from'
-            elsif !contact.sharing && contact.receiving
-              subscription = 'to'
-            else
-              ask = 'suscribe'
+            entry = build_roster_entry(contact)
+            unless entry.nil?
+              user.roster << entry
             end
-            # finally build the roster entry
-            user.roster << Vines::Contact.new(
-              jid: handle,
-              name: handle.gsub(/\@.*?$/, ''),
-              subscription: subscription,
-              ask: ask
-            ) if handle
           end
         end if xuser
       end
@@ -100,7 +103,6 @@ module Vines
 
       def save_user(user)
         # do nothing
-        #log.error("You cannot save a user via XMPP server!")
       end
       with_connection :save_user
 
@@ -128,13 +130,44 @@ module Vines
 
       private
         def establish_connection
-          ActiveRecord::Base.logger = Logger.new('/dev/null')
+          ActiveRecord::Base.logger = log # using vines logger
           ActiveRecord::Base.establish_connection(@config)
         end
 
         def user_by_jid(jid)
           name = JID.new(jid).node
           Sql::User.find_by_username(name)
+        end
+
+        def build_roster_entry(contact)
+          groups = Array.new
+          contact.aspects.each do |aspect|
+            groups.push(aspect.name)
+          end
+
+          handle = contact.person.diaspora_handle
+          ask = 'none'
+          subscription = 'none'
+          
+          if contact.sharing && contact.receiving
+            subscription = 'both'
+          elsif contact.sharing && !contact.receiving
+            ask = 'suscribe'
+            subscription = 'from'
+          elsif !contact.sharing && contact.receiving
+            subscription = 'to'
+          else
+            ask = 'suscribe'
+          end
+
+          # finally build the roster entry
+          return Vines::Contact.new(
+            jid: handle,
+            name: handle.gsub(/\@.*?$/, ''),
+            subscription: subscription,
+            groups: groups,
+            ask: ask
+          ) || nil
         end
     end
   end
