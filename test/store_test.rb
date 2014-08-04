@@ -3,95 +3,112 @@
 require 'test_helper'
 
 describe Vines::Store do
+  let(:dir) { 'conf/certs' }
+  let(:domain_pair) { certificate('wonderland.lit') }
+  let(:wildcard_pair) { certificate('*.wonderland.lit') }
+  subject { Vines::Store.new(dir) }
+
   before do
-    dir = 'conf/certs'
-
-    domain, key = certificate('wonderland.lit')
-    File.open("#{dir}/wonderland.lit.crt", 'w') {|f| f.write(domain) }
-    File.open("#{dir}/wonderland.lit.key", 'w') {|f| f.write(key) }
-
-    wildcard, key = certificate('*.wonderland.lit')
-    File.open("#{dir}/wildcard.lit.crt", 'w') {|f| f.write(wildcard) }
-    File.open("#{dir}/wildcard.lit.key", 'w') {|f| f.write(key) }
-
-    @store = Vines::Store.new('conf/certs')
+    @files =
+      save('wonderland.lit', domain_pair) +
+      save('wildcard.lit', wildcard_pair) +
+      save('duplicate.lit', domain_pair)
   end
 
   after do
-    %w[wonderland.lit.crt wonderland.lit.key wildcard.lit.crt wildcard.lit.key].each do |f|
-      name = "conf/certs/#{f}"
+    @files.each do |name|
       File.delete(name) if File.exists?(name)
     end
   end
 
-  it 'parses certificate files' do
-    refute @store.certs.empty?
-    assert_equal OpenSSL::X509::Certificate, @store.certs.first.class
-  end
+  describe 'creating a store' do
+    it 'parses certificate files' do
+      refute subject.certs.empty?
+      assert_equal OpenSSL::X509::Certificate, subject.certs.first.class
+    end
 
-  it 'ignores expired certificates' do
-    assert @store.certs.all? {|c| c.not_after > Time.new }
+    it 'ignores expired certificates' do
+      assert subject.certs.all? {|c| c.not_after > Time.new }
+    end
+
+    it 'does not raise an error for duplicate certificates' do
+      assert Vines::Store.new(dir)
+    end
   end
 
   describe 'files_for_domain' do
     it 'handles invalid input' do
-      assert_nil @store.files_for_domain(nil)
-      assert_nil @store.files_for_domain('')
+      assert_nil subject.files_for_domain(nil)
+      assert_nil subject.files_for_domain('')
     end
 
     it 'finds files by name' do
-      refute_nil @store.files_for_domain('wonderland.lit')
-      cert, key = @store.files_for_domain('wonderland.lit')
+      refute_nil subject.files_for_domain('wonderland.lit')
+      cert, key = subject.files_for_domain('wonderland.lit')
       assert_certificate_matches_key cert, key
       assert_equal 'wonderland.lit.crt', File.basename(cert)
       assert_equal 'wonderland.lit.key', File.basename(key)
     end
 
     it 'finds files for wildcard' do
-      refute_nil @store.files_for_domain('foo.wonderland.lit')
-      cert, key = @store.files_for_domain('foo.wonderland.lit')
+      refute_nil subject.files_for_domain('foo.wonderland.lit')
+      cert, key = subject.files_for_domain('foo.wonderland.lit')
       assert_certificate_matches_key cert, key
       assert_equal 'wildcard.lit.crt', File.basename(cert)
       assert_equal 'wildcard.lit.key', File.basename(key)
     end
   end
 
+  describe 'trusted?' do
+    it 'does not trust malformed certificates' do
+      refute subject.trusted?('bogus')
+    end
+
+    it 'does not trust unsigned certificates' do
+      pair = certificate('something.lit')
+      refute subject.trusted?(pair.cert)
+    end
+  end
+
   describe 'domain?' do
     it 'handles invalid input' do
-      cert, key = certificate('wonderland.lit')
-      refute @store.domain?(nil, nil)
-      refute @store.domain?(cert, nil)
-      refute @store.domain?(cert, '')
-      refute @store.domain?(nil, '')
-      assert @store.domain?(cert, 'wonderland.lit')
+      pair = certificate('wonderland.lit')
+      refute subject.domain?(nil, nil)
+      refute subject.domain?(pair.cert, nil)
+      refute subject.domain?(pair.cert, '')
+      refute subject.domain?(nil, '')
+      assert subject.domain?(pair.cert, 'wonderland.lit')
     end
 
     it 'verifies certificate subject domains' do
-      cert, key = certificate('wonderland.lit')
-      refute @store.domain?(cert, 'bogus')
-      refute @store.domain?(cert, 'www.wonderland.lit')
-      assert @store.domain?(cert, 'wonderland.lit')
+      pair = certificate('wonderland.lit')
+      refute subject.domain?(pair.cert, 'bogus')
+      refute subject.domain?(pair.cert, 'www.wonderland.lit')
+      assert subject.domain?(pair.cert, 'wonderland.lit')
     end
 
     it 'verifies certificate subject alt domains' do
-      cert, key = certificate('wonderland.lit', 'www.wonderland.lit')
-      refute @store.domain?(cert, 'bogus')
-      refute @store.domain?(cert, 'tea.wonderland.lit')
-      assert @store.domain?(cert, 'www.wonderland.lit')
-      assert @store.domain?(cert, 'wonderland.lit')
+      pair = certificate('wonderland.lit', 'www.wonderland.lit')
+      refute subject.domain?(pair.cert, 'bogus')
+      refute subject.domain?(pair.cert, 'tea.wonderland.lit')
+      assert subject.domain?(pair.cert, 'www.wonderland.lit')
+      assert subject.domain?(pair.cert, 'wonderland.lit')
     end
 
     it 'verifies certificate wildcard domains' do
-      cert, key = certificate('wonderland.lit', '*.wonderland.lit')
-      refute @store.domain?(cert, 'bogus')
-      refute @store.domain?(cert, 'one.two.wonderland.lit')
-      assert @store.domain?(cert, 'tea.wonderland.lit')
-      assert @store.domain?(cert, 'www.wonderland.lit')
-      assert @store.domain?(cert, 'wonderland.lit')
+      pair = certificate('wonderland.lit', '*.wonderland.lit')
+      refute subject.domain?(pair.cert, 'bogus')
+      refute subject.domain?(pair.cert, 'one.two.wonderland.lit')
+      assert subject.domain?(pair.cert, 'tea.wonderland.lit')
+      assert subject.domain?(pair.cert, 'www.wonderland.lit')
+      assert subject.domain?(pair.cert, 'wonderland.lit')
     end
   end
 
   private
+
+  # A public certificate + private key pair.
+  Pair = Struct.new(:cert, :key)
 
   def assert_certificate_matches_key(cert, key)
     refute_nil cert
@@ -102,7 +119,7 @@ describe Vines::Store do
   end
 
   def certificate(domain, altname=nil)
-    # use small key so tests are fast
+    # Use small key so tests are fast.
     key = OpenSSL::PKey::RSA.generate(256)
 
     name = OpenSSL::X509::Name.parse("/C=US/ST=Colorado/L=Denver/O=Test/CN=#{domain}")
@@ -125,6 +142,21 @@ describe Vines::Store do
       ].map {|k, v| factory.create_ext(k, v) }
     end
 
-    [cert.to_pem, key.to_pem]
+    Pair.new(cert.to_pem, key.to_pem)
+  end
+
+  # Write the domain's certificate and private key files to the filesystem for
+  # the store to use.
+  #
+  # domain - The domain name String to use in the file name (e.g. wonderland.lit).
+  # pair   - The Pair containing the public certificate and private key data.
+  #
+  # Returns a String Array of file names that were written.
+  def save(domain, pair)
+    crt = File.expand_path("#{domain}.crt", dir)
+    key = File.expand_path("#{domain}.key", dir)
+    File.open(crt, 'w') {|f| f.write(pair.cert) }
+    File.open(key, 'w') {|f| f.write(pair.key) }
+    [crt, key]
   end
 end
