@@ -53,15 +53,14 @@ module Vines
       end
 
       def initialize(&block)
+        @config = {}
         raise "You configured diaspora-sql adapter without Diaspora" unless defined? AppConfig
-        @config = {
-          :adapter => AppConfig.adapter.to_s,
-          :database => AppConfig.database.to_s,
-          :host => AppConfig.host.to_s,
-          :port => AppConfig.port.to_i,
-          :username => AppConfig.username.to_s,
-          :password => AppConfig.password.to_s
-        }
+        %w[adapter database host port username password].each do |key|
+          begin
+            v = AppConfig.send(key)
+            @config[key.to_sym] = key.eql?('port')? v.to_i : v.to_s
+          rescue NoMethodError; end
+        end
 
         required = [:adapter, :database]
         required << [:host, :port] unless @config[:adapter] == 'sqlite3'
@@ -93,11 +92,13 @@ module Vines
       def authenticate(username, password)
         user = find_user(username)
 
+        pepper = password
+        pepper << Config.instance.pepper unless Config
         dbhash = BCrypt::Password.new(user.password) rescue nil
-        hash = BCrypt::Engine.hash_secret("#{password}#{Config.instance.pepper}", dbhash.salt) rescue nil
+        hash = BCrypt::Engine.hash_secret(pepper, dbhash.salt) rescue nil
 
         userAuth = ((hash && dbhash) && hash == dbhash)
-        tokenAuth = ((password && user.token) && password == user.token)
+        tokenAuth = ((password && user) && password == user.token)
         (tokenAuth || userAuth)? user : nil
       end
 
