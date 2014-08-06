@@ -120,8 +120,7 @@ module Vines
       def authenticate(username, password)
         user = find_user(username)
 
-        pepper = password
-        pepper << Config.instance.pepper unless Config
+        pepper = Config ? "#{password}#{Config.instance.pepper}" : password
         dbhash = BCrypt::Password.new(user.password) rescue nil
         hash = BCrypt::Engine.hash_secret(pepper, dbhash.salt) rescue nil
 
