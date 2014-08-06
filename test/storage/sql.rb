@@ -3,9 +3,17 @@
 require 'test_helper'
 require 'storage/sql_schema'
 
-class AppConfig
-  def self.adapter; "sqlite3"; end
-  def self.database; "test.db"; end
+module Diaspora
+  class Application < Rails::Application
+    def config.database_configuration
+      {
+        "development" => {
+          "adapter" => "sqlite3",
+          "database" => "test.db"
+        }
+      }
+    end
+  end
 end
 
 describe Vines::Storage::Sql do
@@ -23,7 +31,8 @@ describe Vines::Storage::Sql do
   end
 
   after do
-    File.delete(AppConfig.database) if File.exist?(AppConfig.database)
+    db = Rails.application.config.database_configuration["development"]["database"]
+    File.delete(db) if File.exist?(db)
   end
 
   def test_find_user

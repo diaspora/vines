@@ -4,6 +4,7 @@ require 'tmpdir'
 require 'vines'
 require 'ext/nokogiri'
 require 'minitest/autorun'
+require 'rails/all'
 
 class MiniTest::Spec
 

@@ -54,12 +54,13 @@ module Vines
 
       def initialize(&block)
         @config = {}
-        raise "You configured diaspora-sql adapter without Diaspora" unless defined? AppConfig
+        unless defined? Rails
+          raise "You configured diaspora-sql adapter without Diaspora environment"
+        end
+        
+        config = Rails.application.config.database_configuration[Rails.env]
         %w[adapter database host port username password].each do |key|
-          begin
-            v = AppConfig.send(key)
-            @config[key.to_sym] = key.eql?('port')? v.to_i : v.to_s
-          rescue NoMethodError; end
+          @config[key.to_sym] = config[key]
         end
 
         required = [:adapter, :database]
