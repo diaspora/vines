@@ -55,11 +55,10 @@ module Vines
 end
 
 begin
-  # try to initialize diaspora AppConfig
+  # try to initialize diaspora configuration
+  require "#{Dir.pwd}/config/application.rb"
   require "#{Dir.pwd}/config/load_config.rb"
-rescue LoadError
-  puts "Cannot find Diaspora environment! Fallback to vines configuration."
-end
+rescue LoadError; end
 
 %w[
   active_record
