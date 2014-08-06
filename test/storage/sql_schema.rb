@@ -8,6 +8,18 @@ module SqlSchema
     end
   end
 
+  def fragment_id
+    Digest::SHA1.hexdigest("characters:urn:wonderland")
+  end
+  
+  def fragment
+    Nokogiri::XML(%q{
+      <characters xmlns="urn:wonderland">
+        <character>Alice</character>
+      </characters>
+    }.strip).root
+  end
+
   def storage
     Vines::Storage::Sql.new
   end
