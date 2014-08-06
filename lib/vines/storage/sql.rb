@@ -95,11 +95,12 @@ module Vines
           # add diaspora contacts
           xuser.contacts.each do |contact|
             handle = contact.person.diaspora_handle
-            ask, subscription, groups = self.get_diaspora_flags(contact)
+            ask, subscription, groups = get_diaspora_flags(contact)
             user.roster << Vines::Contact.new(
               jid: handle,
               name: handle.gsub(/\@.*?$/, ''),
               subscription: subscription,
+              from_diaspora: true,
               groups: groups,
               ask: ask)
           end
@@ -151,7 +152,7 @@ module Vines
         # add new contacts to roster
         jids = xuser.chat_contacts.map {|c| c.jid }
         user.roster.select {|contact|
-          unless jids.include?(contact.jid.bare.to_s)
+          unless contact.from_diaspora && jids.include?(contact.jid.bare.to_s)
             xuser.chat_contacts.build(
               user_id: xuser.id,
               jid: contact.jid.bare.to_s,
