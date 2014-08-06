@@ -74,7 +74,7 @@ describe Vines::Stanza::Presence::Subscribe do
       subject.process
       recipient.nodes.size.must_equal 1
 
-      query = %q{<query xmlns="jabber:iq:roster"><item jid="hatter@wonderland.lit" subscription="none"/></query>}
+      query = %q{<query xmlns="jabber:iq:roster"><item jid="hatter@wonderland.lit" subscription="none" from_diaspora="false"/></query>}
       expected = node(%Q{<iq to="alice@wonderland.lit/tea" type="set">#{query}</iq>})
       recipient.nodes.first.remove_attribute('id') # id is random
       recipient.nodes.first.must_equal expected
