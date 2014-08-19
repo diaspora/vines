@@ -131,8 +131,8 @@ module Vines
       end
 
       def save_user(user)
-        xuser = user_by_jid(user.jid) ||
-          return # it is not possible to register an account via xmpp server
+        # it is not possible to register an account via xmpp server
+        xuser = user_by_jid(user.jid) || return
 
         # remove deleted contacts from roster
         xuser.chat_contacts.delete(xuser.chat_contacts.select do |contact|
@@ -150,9 +150,8 @@ module Vines
         end
 
         # add new contacts to roster
-        jids = xuser.chat_contacts.map {|c| c.jid }
         user.roster.select {|contact|
-          unless contact.from_diaspora && jids.include?(contact.jid.bare.to_s)
+          unless contact.from_diaspora
             xuser.chat_contacts.build(
               user_id: xuser.id,
               jid: contact.jid.bare.to_s,
