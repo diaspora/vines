@@ -143,6 +143,7 @@ module Vines
         attrs = {
           'xmlns'        => NAMESPACES[:server],
           'xmlns:stream' => NAMESPACES[:stream],
+          'xmlns:db'     => NAMESPACES[:legacy_dialback],
           'xml:lang'     => 'en',
           'id'           => Kit.uuid,
           'from'         => @domain,

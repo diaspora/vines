@@ -14,6 +14,7 @@ module Vines
     :tls              => 'urn:ietf:params:xml:ns:xmpp-tls'.freeze,
     :bind             => 'urn:ietf:params:xml:ns:xmpp-bind'.freeze,
     :session          => 'urn:ietf:params:xml:ns:xmpp-session'.freeze,
+    :stanzas          => 'urn:ietf:params:xml:ns:xmpp-stanzas'.freeze,
     :ping             => 'urn:xmpp:ping'.freeze,
     :delay            => 'urn:xmpp:delay'.freeze,
     :pubsub           => 'http://jabber.org/protocol/pubsub'.freeze,
@@ -32,7 +33,9 @@ module Vines
     :vcard            => 'vcard-temp'.freeze,
     :vcard_update     => 'vcard-temp:x:update'.freeze,
     :si               => 'http://jabber.org/protocol/si'.freeze,
-    :byte_streams     => 'http://jabber.org/protocol/bytestreams'.freeze
+    :byte_streams     => 'http://jabber.org/protocol/bytestreams'.freeze,
+    :dialback         => 'urn:xmpp:features:dialback'.freeze,
+    :legacy_dialback  => 'jabber:server:dialback'.freeze
   }.freeze
 
   module Log
@@ -84,6 +87,7 @@ end
   vines/jid
 
   vines/stanza
+  vines/stanza/dialback
   vines/stanza/iq
   vines/stanza/iq/query
   vines/stanza/iq/auth
@@ -185,7 +189,8 @@ end
   vines/stream/server/outbound/tls_result
   vines/stream/server/outbound/auth_restart
   vines/stream/server/outbound/auth
-  vines/stream/server/outbound/auth_result
+  vines/stream/server/outbound/auth_external_result
+  vines/stream/server/outbound/auth_dialback_result
   vines/stream/server/outbound/final_restart
   vines/stream/server/outbound/final_features
 

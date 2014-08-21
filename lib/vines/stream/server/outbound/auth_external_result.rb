@@ -4,7 +4,7 @@ module Vines
   class Stream
     class Server
       class Outbound
-        class AuthResult < State
+        class AuthExternalResult < State
           SUCCESS = 'success'.freeze
           FAILURE = 'failure'.freeze
 

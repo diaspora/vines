@@ -8,9 +8,10 @@ module Vines
     include Vines::Log
 
     ERROR = 'error'.freeze
+    STREAM = 'stream'.freeze
     PAD   = 20
 
-    attr_reader   :config, :domain
+    attr_reader   :config, :domain, :id
     attr_accessor :user
 
     def initialize(config)
@@ -201,6 +202,18 @@ module Vines
       @config.router
     end
 
+    # Returns the current +State+ of the stream's state machine. Provided as a
+    # method so subclasses can override the behavior.
+    def state
+      @state
+    end
+
+    # Check if node starts a new stream
+    # Maybe introduce a Node class?
+    def stream?(node)
+      node.name == STREAM && node.namespace && node.namespace.href == NAMESPACES[:stream]
+    end
+
     private
 
     # Determine the remote and local socket addresses used by this connection.
@@ -265,6 +278,7 @@ module Vines
       if error?(node)
         close_stream
       else
+        update_stream_id(node)
         state.node(node)
       end
     rescue => e
@@ -302,6 +316,12 @@ module Vines
     # Return true if the jid is domain-only.
     def valid_address?(jid)
       JID.new(jid).domain? rescue false
+    end
+
+    def update_stream_id(node)
+      if stream?(node) # move stream? method somewhere else?
+        @id = node['id'].freeze
+      end
     end
   end
 end

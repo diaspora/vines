@@ -12,7 +12,6 @@ module Vines
       attr_accessor :stream
 
       BODY   = 'body'.freeze
-      STREAM = 'stream'.freeze
 
       def initialize(stream, success=nil)
         @stream, @success = stream, success
@@ -41,7 +40,7 @@ module Vines
       end
 
       def stream?(node)
-        node.name == STREAM && namespace(node) == NAMESPACES[:stream]
+        stream.stream?(node)
       end
 
       def body?(node)

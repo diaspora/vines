@@ -12,7 +12,7 @@ module Vines
 
     def initialize(config)
       @config = config
-      @clients, @servers, @components = {}, [], []
+      @clients, @servers, @components = {}, Set.new, Set.new
       @pending = Hash.new {|h,k| h[k] = [] }
     end
 
@@ -94,6 +94,16 @@ module Vines
       else
         raise StanzaErrors::RemoteServerNotFound.new(stanza, 'cancel')
       end
+    end
+
+    # Return connections still negotiating, for example to verify
+    # a dialback
+    def pending_server_stream(to, from)
+      @servers.find {|stream|
+        !stream.ready? &&
+        stream.remote_domain == to.domain &&
+        stream.domain == from.domain
+      }
     end
 
     # Returns the total number of streams connected to the server.
