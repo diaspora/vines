@@ -12,7 +12,7 @@ module Vines
         id, from, to = %w[id from to].map {|a| @node[a] }
         key = @node.text
         # Maybe select by id?
-        outbound_stream = router.pending_server_stream(JID.new(from), JID.new(to))
+        outbound_stream = router.stream_by_id(id)
 
         # Turn into error ?
         unless outbound_stream && outbound_stream.state.is_a?(Stream::Server::Outbound::AuthDialbackResult)

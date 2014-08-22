@@ -60,7 +60,7 @@ describe Vines::Stream::Server::Outbound::Auth do
     @stream.expect(:domain, 'wonderland.lit')
     expected = %Q{<auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="EXTERNAL">d29uZGVybGFuZC5saXQ=</auth>}
     @stream.expect(:write, nil, [expected])
-    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::AuthResult.new(@stream)])
+    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::AuthExternalResult.new(@stream)])
     mechanisms = %q{<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><mechanism>EXTERNAL</mechanism></mechanisms>}
     node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams">#{mechanisms}</stream:features>})
     @state.node(node)

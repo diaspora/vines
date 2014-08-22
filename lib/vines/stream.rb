@@ -208,12 +208,6 @@ module Vines
       @state
     end
 
-    # Check if node starts a new stream
-    # Maybe introduce a Node class?
-    def stream?(node)
-      node.name == STREAM && node.namespace && node.namespace.href == NAMESPACES[:stream]
-    end
-
     private
 
     # Determine the remote and local socket addresses used by this connection.
@@ -319,7 +313,7 @@ module Vines
     end
 
     def update_stream_id(node)
-      if stream?(node) # move stream? method somewhere else?
+      if Node.stream?(node) # move stream? method somewhere else?
         @id = node['id'].freeze
       end
     end

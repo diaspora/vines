@@ -132,6 +132,7 @@ end
   vines/daemon
   vines/error
   vines/kit
+  vines/node
   vines/router
   vines/token_bucket
   vines/user

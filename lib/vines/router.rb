@@ -12,7 +12,7 @@ module Vines
 
     def initialize(config)
       @config = config
-      @clients, @servers, @components = {}, Set.new, Set.new
+      @clients, @servers, @components = {}, [], []
       @pending = Hash.new {|h,k| h[k] = [] }
     end
 
@@ -96,14 +96,9 @@ module Vines
       end
     end
 
-    # Return connections still negotiating, for example to verify
-    # a dialback
-    def pending_server_stream(to, from)
-      @servers.find {|stream|
-        !stream.ready? &&
-        stream.remote_domain == to.domain &&
-        stream.domain == from.domain
-      }
+    # Return stream by id
+    def stream_by_id(id)
+      (@servers+@clients.values.flatten+@components).find {|stream| stream.id == id }
     end
 
     # Returns the total number of streams connected to the server.
