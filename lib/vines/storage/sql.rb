@@ -150,6 +150,9 @@ module Vines
         end
 
         # add new contacts to roster
+        jids = xuser.chat_contacts.map {|c|
+          c.jid if (c.user_id == xuser.id)
+        }.compact
         user.roster.select {|contact|
           unless contact.from_diaspora
             xuser.chat_contacts.build(
@@ -158,7 +161,7 @@ module Vines
               name: contact.name,
               ask: contact.ask,
               subscription: contact.subscription,
-              groups: contact.groups)
+              groups: contact.groups) unless jids.include?(contact.jid.bare.to_s)
           end
         }
         xuser.save
