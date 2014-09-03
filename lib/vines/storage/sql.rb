@@ -33,8 +33,20 @@ module Vines
 
       class User < ActiveRecord::Base
         has_many :contacts
+        has_many :chat_contacts, :dependent => :destroy
+        has_many :fragments, :dependent => :delete_all
 
         has_one :person, :foreign_key => :owner_id
+      end
+
+      class ChatContact < ActiveRecord::Base
+        belongs_to :users
+
+        serialize :groups, JSON
+      end
+      
+      class ChatFragment < ActiveRecord::Base
+        belongs_to :users
       end
 
       # Wrap the method with ActiveRecord connection pool logic, so we properly
@@ -80,11 +92,27 @@ module Vines
             xuser.encrypted_password,
             xuser.authentication_token
 
+          # add diaspora contacts
           xuser.contacts.each do |contact|
-            entry = build_roster_entry(contact)
-            unless entry.nil?
-              user.roster << entry
-            end
+            handle = contact.person.diaspora_handle
+            ask, subscription, groups = get_diaspora_flags(contact)
+            user.roster << Vines::Contact.new(
+              jid: handle,
+              name: handle.gsub(/\@.*?$/, ''),
+              subscription: subscription,
+              from_diaspora: true,
+              groups: groups,
+              ask: ask)
+          end
+
+          # add external contacts
+          xuser.chat_contacts.each do |contact|
+            user.roster << Vines::Contact.new(
+              jid: contact.jid,
+              name: contact.name,
+              subscription: contact.subscription,
+              groups: contact.groups,
+              ask: contact.ask)
           end
         end if xuser
       end
@@ -93,8 +121,7 @@ module Vines
       def authenticate(username, password)
         user = find_user(username)
 
-        pepper = password
-        pepper << Config.instance.pepper unless Config
+        pepper = "#{password}#{Config.instance.pepper}" rescue password
         dbhash = BCrypt::Password.new(user.password) rescue nil
         hash = BCrypt::Engine.hash_secret(pepper, dbhash.salt) rescue nil
 
@@ -104,29 +131,72 @@ module Vines
       end
 
       def save_user(user)
-        # do nothing
+        # it is not possible to register an account via xmpp server
+        xuser = user_by_jid(user.jid) || return
+
+        # remove deleted contacts from roster
+        xuser.chat_contacts.delete(xuser.chat_contacts.select do |contact|
+          !user.contact?(contact.jid)
+        end)
+
+        # update contacts
+        xuser.chat_contacts.each do |contact|
+          fresh = user.contact(contact.jid)
+          contact.update_attributes(
+            name: fresh.name,
+            ask: fresh.ask,
+            subscription: fresh.subscription,
+            groups: fresh.groups)
+        end
+
+        # add new contacts to roster
+        jids = xuser.chat_contacts.map {|c|
+          c.jid if (c.user_id == xuser.id)
+        }.compact
+        user.roster.select {|contact|
+          unless contact.from_diaspora
+            xuser.chat_contacts.build(
+              user_id: xuser.id,
+              jid: contact.jid.bare.to_s,
+              name: contact.name,
+              ask: contact.ask,
+              subscription: contact.subscription,
+              groups: contact.groups) unless jids.include?(contact.jid.bare.to_s)
+          end
+        }
+        xuser.save
       end
       with_connection :save_user
 
       def find_vcard(jid)
-        # do nothing
+        # not supported yet
         nil
       end
       with_connection :find_vcard
 
       def save_vcard(jid, card)
-        # do nothing
+        # not supported yet
       end
       with_connection :save_vcard
 
       def find_fragment(jid, node)
-        # do nothing
-        nil
+        jid = JID.new(jid).bare.to_s
+        return if jid.empty?
+        if fragment = fragment_by_jid(jid, node)
+          Nokogiri::XML(fragment.xml).root rescue nil
+        end
       end
       with_connection :find_fragment
 
       def save_fragment(jid, node)
-        # do nothing
+        jid = JID.new(jid).bare.to_s
+        fragment = fragment_by_jid(jid, node) ||
+        Sql::ChatFragment.new(
+          user: user_by_jid(jid),
+          root: node.name,
+          namespace: node.namespace.href)
+        fragment.xml = node.to_xml
+        fragment.save
       end
       with_connection :save_fragment
 
@@ -141,16 +211,19 @@ module Vines
           Sql::User.find_by_username(name)
         end
 
-        def build_roster_entry(contact)
+        def fragment_by_jid(jid, node)
+          jid = JID.new(jid).bare.to_s
+          clause = 'user_id=(select id from users where jid=?) and root=? and namespace=?'
+          Sql::ChatFragment.where(clause, jid, node.name, node.namespace.href).first
+        end
+
+        def get_diaspora_flags(contact)
           groups = Array.new
+          ask, subscription = 'none', 'none'
           contact.aspects.each do |aspect|
             groups.push(aspect.name)
           end
 
-          handle = contact.person.diaspora_handle
-          ask = 'none'
-          subscription = 'none'
-          
           if contact.sharing && contact.receiving
             subscription = 'both'
           elsif contact.sharing && !contact.receiving
@@ -161,15 +234,7 @@ module Vines
           else
             ask = 'suscribe'
           end
-
-          # finally build the roster entry
-          return Vines::Contact.new(
-            jid: handle,
-            name: handle.gsub(/\@.*?$/, ''),
-            subscription: subscription,
-            groups: groups,
-            ask: ask
-          ) || nil
+          return ask, subscription, groups
         end
     end
   end

@@ -53,7 +53,7 @@ describe Vines::Contact do
   describe '#to_roster_xml' do
     let(:expected) do
       node(%q{
-        <item jid="alice@wonderland.lit" name="Alice" subscription="from">
+        <item jid="alice@wonderland.lit" name="Alice" subscription="from" from_diaspora="false">
           <group>Buddies</group>
           <group>Friends</group>
         </item>
@@ -71,7 +71,7 @@ describe Vines::Contact do
       node(%q{
         <iq to="hatter@wonderland.lit" type="set">
           <query xmlns="jabber:iq:roster">
-          <item jid="alice@wonderland.lit" name="Alice" subscription="from">
+          <item jid="alice@wonderland.lit" name="Alice" subscription="from" from_diaspora="false">
             <group>Buddies</group>
             <group>Friends</group>
           </item>

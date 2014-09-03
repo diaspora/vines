@@ -4,7 +4,7 @@ module Vines
   class Contact
     include Comparable
 
-    attr_accessor :name, :subscription, :ask, :groups
+    attr_accessor :name, :subscription, :ask, :groups, :from_diaspora
     attr_reader :jid
 
     def initialize(args={})
@@ -12,6 +12,7 @@ module Vines
       raise ArgumentError, 'invalid jid' if @jid.empty?
       @name = args[:name]
       @subscription = args[:subscription] || 'none'
+      @from_diaspora = args[:from_diaspora] || false
       @ask = args[:ask]
       @groups = args[:groups] || []
     end
@@ -29,6 +30,7 @@ module Vines
     def update_from(contact)
       @name = contact.name
       @subscription = contact.subscription
+      @from_diaspora = contact.from_diaspora
       @ask = contact.ask
       @groups = contact.groups.clone
     end
@@ -75,6 +77,7 @@ module Vines
       {
         'name' => @name,
         'subscription' => @subscription,
+        'from_diaspora' => @from_diaspora,
         'ask' => @ask,
         'groups' => @groups.sort!
       }
@@ -102,6 +105,7 @@ module Vines
         el['jid'] = @jid.bare.to_s
         el['name'] = @name unless @name.nil? || @name.empty?
         el['subscription'] = @subscription
+        el['from_diaspora'] = @from_diaspora
         @groups.sort!.each do |group|
           el << doc.create_element('group', group)
         end

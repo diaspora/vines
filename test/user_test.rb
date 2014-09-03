@@ -77,8 +77,13 @@ describe Vines::User do
       node(%q{
         <iq id="42" type="result">
           <query xmlns="jabber:iq:roster">
-            <item jid="a@wonderland.lit" name="Contact 1" subscription="none"><group>A</group><group>B</group></item>
-            <item jid="b@wonderland.lit" name="Contact 2" subscription="none"><group>C</group></item>
+            <item jid="a@wonderland.lit" name="Contact 1" subscription="none" from_diaspora="false">
+              <group>A</group>
+              <group>B</group>
+            </item>
+            <item jid="b@wonderland.lit" name="Contact 2" subscription="none" from_diaspora="false">
+              <group>C</group>
+            </item>
           </query>
         </iq>
       })

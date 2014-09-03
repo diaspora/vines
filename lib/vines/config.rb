@@ -158,7 +158,10 @@ module Vines
     # Returns true if server-to-server connections are allowed with the
     # given domain.
     def s2s?(domain)
-      @ports[:server] && @ports[:server].hosts.include?(domain.to_s)
+      # NOTE: Disabled whitelisting; It is necessary to allow
+      # anonymous hosts, otherwise everyone has to add all hosts manually
+      # TODO: Create a blacklist in case we have to block a malicious host
+      @ports[:server] # && @ports[:server].hosts.include?(domain.to_s)
     end
 
     # Return true if the server is a member of a cluster, serving the same

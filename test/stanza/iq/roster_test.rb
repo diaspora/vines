@@ -36,11 +36,11 @@ describe Vines::Stanza::Iq::Roster do
       node(%q{
         <iq id="42" type="result">
           <query xmlns="jabber:iq:roster">
-            <item jid="cat@wonderland.lit" subscription="none">
+            <item jid="cat@wonderland.lit" subscription="none" from_diaspora="false">
               <group>Cats</group>
               <group>Friends</group>
             </item>
-            <item jid="hatter@wonderland.lit" subscription="none"/>
+            <item jid="hatter@wonderland.lit" subscription="none" from_diaspora="false"/>
           </query>
         </iq>})
     end
@@ -187,7 +187,7 @@ describe Vines::Stanza::Iq::Roster do
       node(%q{
         <iq to="alice@wonderland.lit/tea" type="set">
           <query xmlns="jabber:iq:roster">
-            <item jid="hatter@wonderland.lit" name="Mad Hatter" subscription="none">
+            <item jid="hatter@wonderland.lit" name="Mad Hatter" subscription="none" from_diaspora="false">
               <group>Friends</group>
             </item>
           </query>

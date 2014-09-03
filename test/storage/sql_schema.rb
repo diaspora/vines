@@ -8,6 +8,18 @@ module SqlSchema
     end
   end
 
+  def fragment_id
+    Digest::SHA1.hexdigest("characters:urn:wonderland")
+  end
+  
+  def fragment
+    Nokogiri::XML(%q{
+      <characters xmlns="urn:wonderland">
+        <character>Alice</character>
+      </characters>
+    }.strip).root
+  end
+
   def storage
     Vines::Storage::Sql.new
   end
@@ -66,6 +78,26 @@ module SqlSchema
       
       add_index "contacts", ["person_id"], :name => "index_contacts_on_person_id"
       add_index "contacts", ["user_id", "person_id"], :name => "index_contacts_on_user_id_and_person_id", :unique => true
+
+      create_table "chat_contacts", :force => true do |t|
+        t.integer "user_id", :null => false
+        t.string "jid", :null => false
+        t.string "name"
+        t.string "ask", :limit => 128
+        t.string "subscription", :limit => 128, :null => false
+        t.text "groups"
+      end
+      
+      add_index "chat_contacts", ["user_id", "jid"], :name => "index_chat_contacts_on_user_id_and_jid", :unique => true
+      
+      create_table "chat_fragments", :force => true do |t|
+        t.integer "user_id", :null => false
+        t.string "root", :limit => 256, :null => false
+        t.string "namespace", :limit => 256, :null => false
+        t.text "xml", :null => false
+      end
+      
+      add_index "chat_fragments", ["user_id"], :name => "index_chat_fragments_on_user_id", :unique => true
 
       create_table "users", :force => true do |t|
         t.string   "username"
