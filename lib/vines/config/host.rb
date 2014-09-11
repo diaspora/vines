@@ -11,7 +11,7 @@ module Vines
 
       def initialize(config, name, &block)
         @config, @name = config, name.downcase
-        @storage, @ldap = nil, nil
+        @storage = nil
         @cross_domain_messages = false
         @private_storage = false
         @components, @pubsubs = {}, {}
@@ -24,15 +24,9 @@ module Vines
         if name
           raise "one storage mechanism per host allowed" if @storage
           @storage = Storage.from_name(name, &block)
-          @storage.ldap = @ldap
         else
           @storage
         end
-      end
-
-      def ldap(host='localhost', port=636, &block)
-        @ldap = Storage::Ldap.new(host, port, &block)
-        @storage.ldap = @ldap if @storage
       end
 
       def cross_domain_messages(enabled)

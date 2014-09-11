@@ -12,9 +12,6 @@ Vines::Config.configure do
   # `vines init`.
   certs 'conf/certs'
 
-  # Setup a pepper to generate the encrypted password.
-  pepper "065eb8798b181ff0ea2c5c16aee0ff8b70e04e2ee6bd6e08b49da46924223e39127d5335e466207d42bf2a045c12be5f90e92012a4f05f7fc6d9f3c875f4c95b"
-
   host 'diaspora' do
     cross_domain_messages true
     storage 'sql'
@@ -38,7 +35,7 @@ Vines::Config.configure do
   # XEP-0124 BOSH requests. This allows HTTP clients to connect to
   # the XMPP server.
   http '0.0.0.0', 5280 do
-    bind '/xmpp'
+    bind '/http-bind'
     max_stanza_size 65536
     max_resources_per_account 5
     root 'public'

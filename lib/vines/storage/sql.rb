@@ -18,7 +18,7 @@ module Vines
       class AspectMembership < ActiveRecord::Base
         belongs_to :aspect
         belongs_to :contact
-      
+
         has_one :users, :through => :contact
         has_one :person, :through => :contact
       end
@@ -44,7 +44,7 @@ module Vines
 
         serialize :groups, JSON
       end
-      
+
       class ChatFragment < ActiveRecord::Base
         belongs_to :users
       end
@@ -69,7 +69,7 @@ module Vines
         unless defined? Rails
           raise "You configured diaspora-sql adapter without Diaspora environment"
         end
-        
+
         config = Rails.application.config.database_configuration[Rails.env]
         %w[adapter database host port username password].each do |key|
           @config[key.to_sym] = config[key]
@@ -121,7 +121,7 @@ module Vines
       def authenticate(username, password)
         user = find_user(username)
 
-        pepper = "#{password}#{Config.instance.pepper}" rescue password
+        pepper = "#{password}#{Devise.pepper}" rescue password
         dbhash = BCrypt::Password.new(user.password) rescue nil
         hash = BCrypt::Engine.hash_secret(pepper, dbhash.salt) rescue nil
 

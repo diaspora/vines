@@ -54,12 +54,6 @@ module Vines
   end
 end
 
-begin
-  # try to initialize diaspora configuration
-  require "#{Dir.pwd}/config/application.rb"
-  require "#{Dir.pwd}/config/load_config.rb"
-rescue LoadError; end
-
 %w[
   active_record
   base64
@@ -72,7 +66,6 @@ rescue LoadError; end
   http/parser
   json
   logger
-  net/ldap
   nokogiri
   openssl
   optparse
@@ -116,7 +109,6 @@ rescue LoadError; end
   vines/stanza/pubsub/unsubscribe
 
   vines/storage
-  vines/storage/ldap
   vines/storage/local
   vines/storage/sql
   vines/storage/null
@@ -192,12 +184,21 @@ rescue LoadError; end
   vines/stream/server/outbound/final_restart
   vines/stream/server/outbound/final_features
 
-  vines/command/bcrypt
   vines/command/cert
-  vines/command/init
-  vines/command/ldap
   vines/command/restart
-  vines/command/schema
   vines/command/start
   vines/command/stop
 ].each {|f| require f }
+
+# Try loading diaspora configuration
+%w[
+  config/application.rb
+  config/load_config.rb
+  config/initializers/devise.rb
+].each {|c|
+  begin
+    require "#{Dir.pwd}/#{c}"
+  rescue LoadError
+    puts "Was not able to load #{c}! This not a standalone version. You should use it only in a diaspora environment."
+  end
+}
