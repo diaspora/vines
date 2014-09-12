@@ -54,7 +54,7 @@ module Vines
       return if @closed
       @stanza_size += data.bytesize
       if @stanza_size < max_stanza_size
-        @parser << data rescue error(StreamErrors::NotWellFormed.new)
+        @parser << data #rescue error(StreamErrors::NotWellFormed.new)
       else
         error(StreamErrors::PolicyViolation.new('max stanza size reached'))
       end
