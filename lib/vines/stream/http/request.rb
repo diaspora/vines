@@ -29,9 +29,9 @@ module Vines
           @stream, @body = stream, body
           @headers  = parser.headers
           @method   = parser.http_method
-          @path     = parser.request_path
+          @path     = parser.request_path rescue "/http-bind"
           @url      = parser.request_url
-          @query    = parser.query_string
+          @query    = parser.query_string rescue ""
           @received = Time.now
         end
 
