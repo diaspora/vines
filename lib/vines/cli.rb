@@ -3,7 +3,7 @@ module Vines
   # in the gem. Parses the command line arguments to create a new server
   # directory, and starts and stops the server.
   class CLI
-    COMMANDS = %w[start stop restart init bcrypt cert ldap schema]
+    COMMANDS = %w[start stop restart cert]
 
     def self.start
       self.new.start
@@ -14,7 +14,6 @@ module Vines
     #
     # Returns nothing.
     def start
-      register_storage
       opts = parse(ARGV)
       check_config(opts)
       command = Command.const_get(opts[:command].capitalize).new
@@ -29,20 +28,6 @@ module Vines
     end
 
     private
-
-    # Try to load various storage backends provided by vines-* gems and register
-    # them with the storage system for the config file to use.
-    #
-    # Returns nothing.
-    def register_storage
-      %w[couchdb mongodb redis sql].each do |backend|
-        begin
-          require 'vines/storage/%s' % backend
-        rescue LoadError
-          # do nothing
-        end
-      end
-    end
 
     # Parse the command line arguments and run the matching sub-command
     # (e.g. init, start, stop, etc).
@@ -110,9 +95,12 @@ module Vines
       options.tap do |opts|
         opts[:args]    = args
         opts[:command] = command
-        opts[:config]  = File.expand_path("#{Dir.pwd}/config/vines.rb") || File.expand_path("conf/config.rb")
+        opts[:config]  = File.expand_path("conf/config.rb")
         opts[:pid]     = File.expand_path(opts[:pid])
         opts[:log]     = File.expand_path(opts[:log])
+        if defined? AppConfig
+          opts[:config] = "vines/config/diaspora"
+        end
       end
     end
 
@@ -122,11 +110,10 @@ module Vines
     #
     # Returns nothing.
     def check_config(opts)
-      return if %w[bcrypt init].include?(opts[:command])
-      unless File.exists?(opts[:config])
-        puts "No config file found at #{opts[:config]}"
-        exit(1)
-      end
+      #unless (File.exists?(opts[:config]) or defined?(AppConfig))
+      #  puts "No config file found at #{opts[:config]}"
+      #  exit(1)
+      #end
     end
   end
 end

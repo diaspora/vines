@@ -4,8 +4,6 @@ module Vines
   class Storage
     include Vines::Log
 
-    attr_accessor :ldap
-
     @@nicks = {}
 
     # Register a nickname that can be used in the config file to specify this
@@ -45,23 +43,6 @@ module Vines
       end
     end
 
-    # Wrap an authenticate method with a new method that uses LDAP if it's
-    # enabled in the config file. If LDAP is not enabled, invoke the original
-    # authenticate method as usual. This allows storage classes to implement
-    # their native authentication logic and not worry about handling LDAP.
-    #
-    # For example:
-    # def authenticate(username, password)
-    #   some_user_lookup_by_password(username, password)
-    # end
-    # wrap_ldap :authenticate
-    def self.wrap_ldap(method)
-      old = instance_method(method)
-      define_method method do |*args|
-        ldap? ? authenticate_with_ldap(*args) : old.bind(self).call(*args)
-      end
-    end
-
     # Wrap a method with Fiber yield and resume logic. The method must yield
     # its result to a block. This makes it easier to write asynchronous
     # implementations of +authenticate+, +find_user+, and +save_user+ that
@@ -90,11 +71,6 @@ module Vines
       end
     end
 
-    # Return +true+ if users are authenticated against an LDAP directory.
-    def ldap?
-      !!ldap
-    end
-
     # Validate the username and password pair and return a +Vines::User+ object
     # on success. Return +nil+ on failure.
     #
@@ -110,7 +86,6 @@ module Vines
       hash = BCrypt::Password.new(user.password) rescue nil
       (hash && hash == password) ? user : nil
     end
-    wrap_ldap :authenticate
 
     # Return the +Vines::User+ associated with the JID. Return +nil+ if the user
     # could not be found. JID may be +nil+, a +String+, or a +Vines::JID+
@@ -207,33 +182,6 @@ module Vines
           nil
         end
       end
-    end
-
-    # Return a +Vines::User+ object if we are able to bind to the LDAP server
-    # using the username and password. Return +nil+ if authentication failed. If
-    # authentication succeeds, but the user is not yet stored in our database,
-    # save the user to the database.
-    def authenticate_with_ldap(username, password, &block)
-      op = operation { ldap.authenticate(username, password) }
-      cb = proc {|user| save_ldap_user(user, &block) }
-      EM.defer(op, cb)
-    end
-    fiber :authenticate_with_ldap
-
-    # Save missing users to the storage database after they're authenticated with
-    # LDAP. This allows admins to define users once in LDAP and have them sync
-    # to the chat database the first time they successfully sign in.
-    def save_ldap_user(user, &block)
-      Fiber.new do
-        if user.nil?
-          block.call
-        elsif found = find_user(user.jid)
-          block.call(found)
-        else
-          save_user(user)
-          block.call(user)
-        end
-      end.resume
     end
   end
 end

@@ -21,7 +21,6 @@ module Vines
     end
 
     def initialize(&block)
-      @pepper = "" # no pepper set
       @certs = File.expand_path('conf/certs')
       @vhosts, @ports, @cluster = {}, {}, nil
       @null = Storage::Null.new
@@ -39,19 +38,11 @@ module Vines
       dupes = names.uniq.size != names.size || (@vhosts.keys & names).any?
       raise "one host definition per domain allowed" if dupes
       names.each do |name|
-        if name.eql? "diaspora"
-          @vhosts[domain_name] = Host.new(self, domain_name, &block)
-        else
-          @vhosts[name] = Host.new(self, name, &block)
-        end
+        @vhosts[name] = Host.new(self, name, &block)
       end
     end
 
-    def pepper(pepper=nil)
-      pepper ? @pepper = pepper : @pepper
-    end
-
-    def domain_name
+    def diaspora_domain
       AppConfig.environment.url
         .gsub(/^http(s){0,1}:\/\/|\/$/, '')
         .to_s rescue "localhost"
@@ -78,7 +69,7 @@ module Vines
         unless File.exists?(file)
           File.new(file, 'w') rescue raise "log directory doesn't exists"
         end
-        
+
         if File.exists?(file)
           Vines::Log.set_log_file(file)
         end

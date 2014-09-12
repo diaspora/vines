@@ -11,7 +11,7 @@ module SqlSchema
   def fragment_id
     Digest::SHA1.hexdigest("characters:urn:wonderland")
   end
-  
+
   def fragment
     Nokogiri::XML(%q{
       <characters xmlns="urn:wonderland">
@@ -26,7 +26,9 @@ module SqlSchema
 
   def create_schema(args={})
     args[:force] ||= false
-    
+
+    # disable stdout logging
+    ActiveRecord::Migration.verbose = false
     ActiveRecord::Schema.define do
       create_table "people", :force => true do |t|
         t.string   "guid",                                     :null => false

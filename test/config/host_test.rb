@@ -47,43 +47,6 @@ describe Vines::Config::Host do
     refute_nil config.vhost('wonderland.lit').storage
   end
 
-  def test_ldap_added_to_storage
-    config = Vines::Config.new do
-      host 'wonderland.lit' do
-        storage(:fs) { dir Dir.tmpdir }
-        # added after storage
-        ldap 'ldap.wonderland.lit', 1636 do
-          tls true
-          dn 'cn=Directory Manager'
-          password 'secr3t'
-          basedn 'dc=wonderland,dc=lit'
-          groupdn 'cn=chatters,dc=wonderland,dc=lit'
-          object_class 'person'
-          user_attr 'uid'
-          name_attr 'cn'
-        end
-      end
-
-      host 'verona.lit' do
-        ldap 'ldap.verona.lit', 1636 do
-          tls true
-          dn 'cn=Directory Manager'
-          password 'secr3t'
-          basedn 'dc=wonderland,dc=lit'
-          object_class 'person'
-          user_attr 'uid'
-          name_attr 'cn'
-        end
-        # added before storage
-        storage(:fs) { dir Dir.tmpdir }
-      end
-    end
-    %w[wonderland.lit verona.lit].each do |domain|
-      refute_nil config.vhost(domain).storage.ldap
-      assert config.vhost(domain).storage.ldap?
-    end
-  end
-
   def test_empty_component_name_raises
     assert_raises(RuntimeError) do
       Vines::Config.new do

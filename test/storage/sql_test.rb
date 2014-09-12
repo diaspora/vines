@@ -21,7 +21,7 @@ describe Vines::Storage::Sql do
 
   before do
     storage && create_schema(:force => true)
-    
+
     Vines::Storage::Sql::User.new(
       username: "test",
       email: "test@test.de",
@@ -34,7 +34,7 @@ describe Vines::Storage::Sql do
     db = Rails.application.config.database_configuration["development"]["database"]
     File.delete(db) if File.exist?(db)
   end
-  
+
   def test_save_user
     fibered do
       db = storage
@@ -47,10 +47,10 @@ describe Vines::Storage::Sql do
         name: 'Contact 1')
       db.save_user(user)
       user = db.find_user('test@test.de')
-      
+
       assert (user != nil), "no user found"
       assert_equal "test@test.de", user.jid.to_s
-      
+
       assert_equal 1, user.roster.length
       assert_equal "contact1@domain.tld", user.roster[0].jid.to_s
       assert_equal "Contact 1", user.roster[0].name
@@ -106,30 +106,30 @@ describe Vines::Storage::Sql do
       root = Nokogiri::XML(%q{<characters xmlns="urn:wonderland"/>}).root
       bad_name = Nokogiri::XML(%q{<not_characters xmlns="urn:wonderland"/>}).root
       bad_ns = Nokogiri::XML(%q{<characters xmlns="not:wonderland"/>}).root
-      
+
       node = db.find_fragment(nil, nil)
       assert_nil node
-      
+
       node = db.find_fragment('full@wonderland.lit', bad_name)
       assert_nil node
-      
+
       node = db.find_fragment('full@wonderland.lit', bad_ns)
       assert_nil node
-      
+
       node = db.find_fragment('full@wonderland.lit', root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
-      
+
       node = db.find_fragment(Vines::JID.new('full@wonderland.lit'), root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
-      
+
       node = db.find_fragment(Vines::JID.new('full@wonderland.lit/resource'), root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
     end
   end
-  
+
   def test_save_fragment
     skip("not working probably")
 
