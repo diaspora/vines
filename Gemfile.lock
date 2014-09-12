@@ -6,7 +6,7 @@ PATH
       bcrypt (~> 3.1)
       em-hiredis (~> 0.1.1)
       eventmachine (~> 1.0)
-      http_parser.rb (~> 0.6)
+      http_parser.rb (= 0.5.3)
       nokogiri (~> 1.6)
 
 GEM
@@ -47,7 +47,7 @@ GEM
     eventmachine (1.0.3)
     hike (1.2.3)
     hiredis (0.4.5)
-    http_parser.rb (0.6.0)
+    http_parser.rb (0.5.3)
     i18n (0.6.11)
     json (1.8.1)
     mail (2.5.4)
