@@ -405,6 +405,20 @@ describe Vines::Config do
     assert config.vhost('verona.lit').cross_domain_messages?
   end
 
+  def test_accept_self_signed
+    config = Vines::Config.new do
+      host 'wonderland.lit' do
+        storage(:fs) { dir Dir.tmpdir }
+      end
+      host 'verona.lit' do
+        accept_self_signed true
+        storage(:fs) { dir Dir.tmpdir }
+      end
+    end
+    refute config.vhost('wonderland.lit').accept_self_signed?
+    assert config.vhost('verona.lit').accept_self_signed?
+  end
+
   def test_local_jid?
     config = Vines::Config.new do
       host 'wonderland.lit', 'verona.lit' do

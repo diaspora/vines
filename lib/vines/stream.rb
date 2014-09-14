@@ -98,7 +98,16 @@ module Vines
       router.interested_resources(*jid, user.jid)
     end
 
-    def ssl_verify_peer(pem); true; end
+    def ssl_verify_peer(pem)
+      # Skip verifying if user accept self-signed certificates
+      return if self.vhost.accept_self_signed?
+      # EM is supposed to close the connection when this returns false,
+      # but it only does that for inbound connections, not when we
+      # make a connection to another server.
+      @store.trusted?(pem).tap do |trusted|
+        close_connection unless trusted
+      end
+    end
 
     def cert_domain_matches?(domain)
       @store.domain?(get_peer_cert, domain)
