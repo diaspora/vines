@@ -1,6 +1,6 @@
 language: ruby
 before_script: "export RAILS_ENV=development"
-script: "bundle exec rake test"
+script: "travis_retry bundle exec rake test"
 rvm:
 - 2.0.0
 - 1.9.3
