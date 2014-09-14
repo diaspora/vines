@@ -1,8 +1,8 @@
 require './lib/vines/version'
 
 Gem::Specification.new do |s|
-  s.name         = 'diaspora-vines'
-  s.version      = Vines::VERSION
+  s.name         = "diaspora-vines"
+  s.version      = "0.4.10.diaspora.#{Vines::VERSION}"
   s.summary      = %q[Diaspora-vines is a Vines fork build for diaspora integration.]
   s.description  = %q[Diaspora-vines is a Vines fork build for diaspora integration. DO NOT use it unless you know what you are doing!]
 
