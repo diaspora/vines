@@ -8,6 +8,10 @@ module Vines
 
     # Register a nickname that can be used in the config file to specify this
     # storage implementation.
+    #
+    # name - The String name for this storage backend.
+    #
+    # Returns nothing.
     def self.register(name)
       @@nicks[name.to_sym] = self
     end
@@ -23,15 +27,18 @@ module Vines
     # with blocking IO don't need to worry about threading or blocking the
     # EventMachine reactor thread if they wrap their methods with this one.
     #
-    # For example:
-    # def find_user(jid)
-    #   some_blocking_lookup(jid)
-    # end
-    # defer :find_user
+    # Examples
+    #
+    #   def find_user(jid)
+    #     some_blocking_lookup(jid)
+    #   end
+    #   defer :find_user
     #
     # Storage classes that use asynchronous IO (through an EventMachine
     # enabled library like em-http-request or em-redis) don't need any special
     # consideration and must not use this method.
+    #
+    # Returns nothing.
     def self.defer(method)
       old = instance_method(method)
       define_method method do |*args|
@@ -45,21 +52,24 @@ module Vines
 
     # Wrap a method with Fiber yield and resume logic. The method must yield
     # its result to a block. This makes it easier to write asynchronous
-    # implementations of +authenticate+, +find_user+, and +save_user+ that
+    # implementations of `authenticate`, `find_user`, and `save_user` that
     # block and return a result rather than yielding.
     #
-    # For example:
-    # def find_user(jid)
-    #   http = EM::HttpRequest.new(url).get
-    #   http.callback { yield build_user_from_http_response(http) }
-    # end
-    # fiber :find_user
+    # Examples
     #
-    # Because +find_user+ has been wrapped in Fiber logic, we can call it
+    #   def find_user(jid)
+    #     http = EM::HttpRequest.new(url).get
+    #     http.callback { yield build_user_from_http_response(http) }
+    #   end
+    #   fiber :find_user
+    #
+    # Because `find_user` has been wrapped in Fiber logic, we can call it
     # synchronously even though it uses asynchronous EventMachine calls.
     #
-    # user = storage.find_user('alice@wonderland.lit')
-    # puts user.nil?
+    #   user = storage.find_user('alice@wonderland.lit')
+    #   puts user.nil?
+    #
+    # Returns nothing.
     def self.fiber(method)
       old = instance_method(method)
       define_method method do |*args|
@@ -71,108 +81,162 @@ module Vines
       end
     end
 
-    # Validate the username and password pair and return a +Vines::User+ object
-    # on success. Return +nil+ on failure.
+    # Validate the username and password pair.
     #
-    # For example:
-    # user = storage.authenticate('alice@wonderland.lit', 'secr3t')
-    # puts user.nil?
+    # username - The String login JID to verify.
+    # password - The String password the user presented to the server.
+    #
+    # Examples
+    #
+    #   user = storage.authenticate('alice@wonderland.lit', 'secr3t')
+    #   puts user.nil?
     #
     # This default implementation validates the password against a bcrypt hash
     # of the password stored in the database. Sub-classes not using bcrypt
     # passwords must override this method.
+    #
+    # Returns a Vines::User object on success, nil on failure.
     def authenticate(username, password)
       user = find_user(username)
       hash = BCrypt::Password.new(user.password) rescue nil
       (hash && hash == password) ? user : nil
     end
 
-    # Return the +Vines::User+ associated with the JID. Return +nil+ if the user
-    # could not be found. JID may be +nil+, a +String+, or a +Vines::JID+
-    # object. It may be a bare JID or a full JID. Implementations of this method
-    # must convert the JID to a bare JID before searching for the user in the
-    # database.
+    # Find the user in the storage database by their unique JID.
     #
-    # user = storage.find_user('alice@wonderland.lit')
-    # puts user.nil?
+    # jid - The String or JID of the user, possibly nil. This may be either a
+    #       bare JID or full JID. Implementations of this method must convert
+    #       the JID to a bare JID before searching for the user in the database.
+    #
+    # Examples
+    #
+    #   # Bare JID lookup.
+    #   user = storage.find_user('alice@wonderland.lit')
+    #   puts user.nil?
+    #
+    #   # Full JID lookup.
+    #   user = storage.find_user('alice@wonderland.lit/tea')
+    #   puts user.nil?
+    #
+    # Returns the User identified by the JID, nil if not found.
     def find_user(jid)
       raise 'subclass must implement'
     end
 
-    # Persist the +Vines::User+ object to the database and return when the save
-    # is complete.
+    # Persist the user to the database, and return when the save is complete.
     #
-    # alice = Vines::User.new(:jid => 'alice@wonderland.lit')
-    # storage.save_user(alice)
-    # puts 'saved'
+    # user - The User to persist.
+    #
+    # Examples
+    #
+    #   alice = Vines::User.new(jid: 'alice@wonderland.lit')
+    #   storage.save_user(alice)
+    #   puts 'saved'
+    #
+    # Returns nothing.
     def save_user(user)
       raise 'subclass must implement'
     end
 
-    # Return the Nokogiri::XML::Node for the vcard stored for this JID. Return
-    # nil if the vcard could not be found. JID may be +nil+, a +String+, or a
-    # +Vines::JID+ object. It may be a bare JID or a full JID. Implementations
-    # of this method must convert the JID to a bare JID before searching for the
-    # vcard in the database.
+    # Find the user's vcard by their unique JID.
     #
-    # card = storage.find_vcard('alice@wonderland.lit')
-    # puts card.nil?
+    # jid - The String or JID of the user, possibly nil. This may be either a
+    #       bare JID or full JID. Implementations of this method must convert
+    #       the JID to a bare JID before searching for the vcard in the database.
+    #
+    # Examples
+    #
+    #   card = storage.find_vcard('alice@wonderland.lit')
+    #   puts card.nil?
+    #
+    # Returns the vcard's Nokogiri::XML::Node, nil if not found.
     def find_vcard(jid)
       raise 'subclass must implement'
     end
 
-    # Save the vcard to the database and return when the save is complete. JID
-    # may be a +String+ or a +Vines::JID+ object.  It may be a bare JID or a
-    # full JID. Implementations of this method must convert the JID to a bare
-    # JID before saving the vcard. Card is a +Nokogiri::XML::Node+ object.
+    # Save the vcard to the database, and return when the save is complete.
     #
-    # card = Nokogiri::XML('<vCard>...</vCard>').root
-    # storage.save_vcard('alice@wonderland.lit', card)
-    # puts 'saved'
+    # jid  - The String or JID of the user, possibly nil. This may be either a
+    #        bare JID or full JID. Implementations of this method must convert
+    #        the JID to a bare JID before saving the vcard.
+    # card - The vcard's Nokogiri::XML::Node.
+    #
+    # Examples
+    #
+    #   card = Nokogiri::XML('<vCard>...</vCard>').root
+    #   storage.save_vcard('alice@wonderland.lit', card)
+    #   puts 'saved'
+    #
+    # Returns nothing.
     def save_vcard(jid, card)
       raise 'subclass must implement'
     end
 
-    # Return the Nokogiri::XML::Node for the XML fragment stored for this JID.
-    # Return nil if the fragment could not be found. JID may be +nil+, a
-    # +String+, or a +Vines::JID+ object. It may be a bare JID or a full JID.
-    # Implementations of this method must convert the JID to a bare JID before
-    # searching for the fragment in the database.
-    #
-    # Private XML storage uniquely identifies fragments by JID, root element name,
+    # Find the private XML fragment previously stored by the user. Private
+    # XML storage uniquely identifies fragments by JID, root element name,
     # and root element namespace.
     #
-    # root = Nokogiri::XML('<custom xmlns="urn:custom:ns"/>').root
-    # fragment = storage.find_fragment('alice@wonderland.lit', root)
-    # puts fragment.nil?
+    # jid  - The String or JID of the user, possibly nil. This may be either a
+    #        bare JID or full JID. Implementations of this method must convert
+    #        the JID to a bare JID before searching for the fragment in the database.
+    # node - The XML::Node that uniquely identifies the fragment by element
+    #        name and namespace.
+    #
+    # Examples
+    #
+    #   root = Nokogiri::XML('<custom xmlns="urn:custom:ns"/>').root
+    #   fragment = storage.find_fragment('alice@wonderland.lit', root)
+    #   puts fragment.nil?
+    #
+    # Returns the fragment's Nokogiri::XML::Node or nil if not found.
     def find_fragment(jid, node)
       raise 'subclass must implement'
     end
 
-    # Save the XML fragment to the database and return when the save is complete.
-    # JID may be a +String+ or a +Vines::JID+ object.  It may be a bare JID or a
-    # full JID. Implementations of this method must convert the JID to a bare
-    # JID before saving the fragment. Fragment is a +Nokogiri::XML::Node+ object.
+    # Save the XML fragment to the database, and return when the save is complete.
     #
-    # fragment = Nokogiri::XML('<custom xmlns="urn:custom:ns">some data</custom>').root
-    # storage.save_fragment('alice@wonderland.lit', fragment)
-    # puts 'saved'
+    # jid      - The String or JID of the user, possibly nil. This may be
+    #            either a bare JID or full JID. Implementations of this method
+    #            must convert the JID to a bare JID before searching for the
+    #            fragment.
+    # fragment - The XML::Node to save.
+    #
+    # Examples
+    #
+    #   fragment = Nokogiri::XML('<custom xmlns="urn:custom:ns">some data</custom>').root
+    #   storage.save_fragment('alice@wonderland.lit', fragment)
+    #   puts 'saved'
+    #
+    # Returns nothing.
     def save_fragment(jid, fragment)
       raise 'subclass must implement'
     end
 
     private
 
-    # Return true if any of the arguments are nil or empty strings.
-    # For example:
-    # username, password = 'alice@wonderland.lit', ''
-    # empty?(username, password) #=> true
+    # Determine if any of the arguments are nil or empty strings.
+    #
+    # Examples
+    #
+    #   username, password = 'alice@wonderland.lit', ''
+    #   empty?(username, password) #=> true
+    #
+    # Returns true if any of the arguments are nil or empty strings.
     def empty?(*args)
       args.flatten.any? {|arg| (arg || '').strip.empty? }
     end
 
-    # Return a +proc+ suitable for running on the +EM.defer+ thread pool that traps
-    # and logs any errors thrown by the provided block.
+    # Create a proc suitable for running on the EM.defer thread pool, that
+    # traps and logs any errors thrown by the provided block.
+    #
+    # block - The block to wrap in error handling.
+    #
+    # Examples
+    #
+    #   op = operation { do_something_on_thread_pool() }
+    #   EM.defer(op)
+    #
+    # Returns a Proc.
     def operation
       proc do
         begin
