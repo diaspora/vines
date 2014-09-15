@@ -15,7 +15,6 @@ module Vines
     # Returns nothing.
     def start
       opts = parse(ARGV)
-      check_config(opts)
       command = Command.const_get(opts[:command].capitalize).new
       begin
         command.run(opts)
@@ -102,18 +101,6 @@ module Vines
           opts[:config] = "vines/config/diaspora"
         end
       end
-    end
-
-    # Many commands must be run in the context of a vines server directory
-    # created with `vines init`. If the command can't find the server's config
-    # file, print an error message and exit.
-    #
-    # Returns nothing.
-    def check_config(opts)
-      #unless (File.exists?(opts[:config]) or defined?(AppConfig))
-      #  puts "No config file found at #{opts[:config]}"
-      #  exit(1)
-      #end
     end
   end
 end
