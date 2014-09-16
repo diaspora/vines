@@ -21,6 +21,7 @@ Vines::Config.configure do
 
   server AppConfig.chat.server.s2s.address.to_s, AppConfig.chat.server.s2s.port.to_i do
     max_stanza_size AppConfig.chat.server.s2s.max_stanza_size.to_i
+    blacklist AppConfig.chat.server.s2s.blacklist.get
   end
 
   http AppConfig.chat.server.bosh.address.to_s, AppConfig.chat.server.bosh.port.to_i do

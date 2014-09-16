@@ -28,7 +28,7 @@ Vines::Config.configure do
   # much larger than the setting for client-to-server.
   server '0.0.0.0', 5269 do
     max_stanza_size 131072
-    hosts []
+    blacklist []
   end
 
   # Configure the built-in HTTP server that serves static files and responds to
