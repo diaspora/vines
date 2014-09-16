@@ -15,6 +15,7 @@ module Vines
     :bind             => 'urn:ietf:params:xml:ns:xmpp-bind'.freeze,
     :session          => 'urn:ietf:params:xml:ns:xmpp-session'.freeze,
     :ping             => 'urn:xmpp:ping'.freeze,
+    :delay            => 'urn:xmpp:delay'.freeze,
     :pubsub           => 'http://jabber.org/protocol/pubsub'.freeze,
     :pubsub_event     => 'http://jabber.org/protocol/pubsub#event'.freeze,
     :pubsub_create    => 'http://jabber.org/protocol/pubsub#create-nodes'.freeze,
@@ -26,6 +27,7 @@ module Vines
     :disco_items      => 'http://jabber.org/protocol/disco#items'.freeze,
     :disco_info       => 'http://jabber.org/protocol/disco#info'.freeze,
     :http_bind        => 'http://jabber.org/protocol/httpbind'.freeze,
+    :offline          => 'msgoffline'.freeze,
     :bosh             => 'urn:xmpp:xbosh'.freeze,
     :vcard            => 'vcard-temp'.freeze,
     :si               => 'http://jabber.org/protocol/si'.freeze,
@@ -72,6 +74,7 @@ end
   resolv
   set
   socket
+  time
   uri
   yaml
 

@@ -18,8 +18,31 @@ module Vines
         unless self['type'].nil?
           raise StanzaErrors::BadRequest.new(self, 'modify')
         end
+        check_offline_messages(stream.last_broadcast_presence)
         dir = outbound? ? 'outbound' : 'inbound'
         method("#{dir}_broadcast_presence").call
+      end
+
+      def check_offline_messages(presence)
+        priority = presence.xpath("//priority").text rescue nil
+        unless priority.nil?
+          jid = stream.user.jid.to_s
+          messages = storage.find_messages(jid)
+          messages.each do |message|
+            stamp = Time.parse(message.created_at.to_s)
+            doc = Nokogiri::XML::Builder.new
+            doc.message(:type => "chat", :from => message.from, :to => message.to) do |m|
+              m.send(:"body", message.message)
+              m.send(:"delay", "Offline Storage",
+                     :xmlns => NAMESPACES[:delay],
+                     :from => message.from,
+                     :stamp => stamp.iso8601)
+            end
+            xml = doc.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+            stream.write(xml)
+            message.destroy
+          end
+        end
       end
 
       def outbound?

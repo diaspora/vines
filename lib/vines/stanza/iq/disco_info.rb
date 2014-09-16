@@ -19,7 +19,7 @@ module Vines
                 features(query, :disco_info, :ping, :pubsub, *pubsub)
               else
                 identity(query, 'server', 'im')
-                features = [:disco_info, :disco_items, :ping, :vcard, :version]
+                features = [:disco_info, :disco_items, :offline, :ping, :vcard, :version]
                 features << :storage if stream.config.private_storage?(validate_to || stream.domain)
                 features(query, features)
               end

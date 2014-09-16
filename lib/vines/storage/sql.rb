@@ -56,6 +56,8 @@ module Vines
         has_one :person, :foreign_key => :owner_id
       end
 
+      class ChatOfflineMessage < ActiveRecord::Base; end
+
       class ChatContact < ActiveRecord::Base
         belongs_to :users
       end
@@ -199,6 +201,17 @@ module Vines
         nil
       end
       with_connection :save_vcard
+
+      def find_messages(jid)
+        jid = JID.new(jid).bare.to_s
+        return if jid.empty?
+        Sql::ChatOfflineMessage.where(:to => jid)
+      end
+
+      def save_message(from, to, msg)
+        return if from.empty? || to.empty? || msg.empty?
+        Sql::ChatOfflineMessage.create(:from => from, :to => to, :message => msg)
+      end
 
       def find_fragment(jid, node)
         jid = JID.new(jid).bare.to_s
