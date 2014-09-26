@@ -14,6 +14,7 @@ module Vines
         @storage = nil
         @cross_domain_messages = false
         @private_storage = false
+        @accept_self_signed = false
         @components, @pubsubs = {}, {}
         validate_domain(@name)
         instance_eval(&block)
@@ -27,6 +28,14 @@ module Vines
         else
           @storage
         end
+      end
+
+      def accept_self_signed(enabled)
+        @accept_self_signed = !!enabled
+      end
+
+      def accept_self_signed?
+        @accept_self_signed
       end
 
       def cross_domain_messages(enabled)

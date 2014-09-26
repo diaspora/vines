@@ -10,7 +10,8 @@ Vines::Config.configure do
   certs AppConfig.chat.server.certs.to_s
 
   host diaspora_domain do
-    cross_domain_messages true
+    cross_domain_messages AppConfig.chat.server.cross_domain_messages
+    accept_self_signed AppConfig.chat.server.accept_self_signed
     storage 'sql'
   end
 
