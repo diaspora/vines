@@ -329,4 +329,30 @@ describe Vines::Config::Host do
     refute config.private_storage?(Vines::JID.new('alice@wonderland.lit'))
     refute config.private_storage?(nil)
   end
+
+  def test_enabled_blacklisting
+    config = Vines::Config.new do
+      host 'wonderland.lit' do
+        storage(:fs) { dir Dir.tmpdir }
+      end
+      server '0.0.0.0', 5269 do
+        max_stanza_size 131072
+        blacklist ['wonderland.lit']
+      end
+    end
+    refute config.s2s?('wonderland.lit')
+  end
+
+  def test_disabled_blacklisting
+    config = Vines::Config.new do
+      host 'wonderland.lit' do
+        storage(:fs) { dir Dir.tmpdir }
+      end
+      server '0.0.0.0', 5269 do
+        max_stanza_size 131072
+        blacklist []
+      end
+    end
+    assert config.s2s?('wonderland.lit')
+  end
 end

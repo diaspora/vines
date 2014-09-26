@@ -59,16 +59,16 @@ module Vines
 
     class ServerPort < Port
       def initialize(config, host='0.0.0.0', port=5269, &block)
-        @hosts, @stream = [], Vines::Stream::Server
+        @blacklist, @stream = [], Vines::Stream::Server
         super(config, host, port, &block)
       end
 
-      def hosts(*hosts)
-        if hosts.any?
-          @hosts << hosts
-          @hosts.flatten!
+      def blacklist(*blacklist)
+        if blacklist.any?
+          @blacklist << blacklist
+          @blacklist.flatten!
         else
-          @hosts
+          @blacklist
         end
       end
     end
