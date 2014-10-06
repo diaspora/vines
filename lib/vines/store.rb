@@ -66,7 +66,7 @@ module Vines
             [name, certs]
           end
         end
-        Hash[pairs]
+        Hash[pairs.compact]
       end
       @@sources.values.flatten
     end
