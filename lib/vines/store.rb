@@ -62,11 +62,15 @@ module Vines
           files << chain unless chain.nil?
         end
         pairs = files.map do |name|
-          File.open(name, "r:UTF-8") do |f|
-            pems = f.read.scan(pattern)
-            certs = pems.map {|pem| OpenSSL::X509::Certificate.new(pem) }
-            certs.reject! {|cert| cert.not_after < Time.now }
-            [name, certs]
+          begin
+            File.open(name, "r:UTF-8") do |f|
+              pems = f.read.scan(pattern)
+              certs = pems.map {|pem| OpenSSL::X509::Certificate.new(pem) }
+              certs.reject! {|cert| cert.not_after < Time.now }
+              [name, certs]
+            end
+          rescue ArgumentError => e
+            puts "Skipping '#{name}': #{e.message.to_s}"
           end
         end
         Hash[pairs.compact]
