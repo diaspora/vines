@@ -57,7 +57,10 @@ module Vines
       @@sources ||= begin
         pattern = /-{5}BEGIN CERTIFICATE-{5}\n.*?-{5}END CERTIFICATE-{5}\n/m
         files = Dir[File.join(@dir, '*.crt')]
-        files << AppConfig.environment.certificate_authorities if defined?(AppConfig)
+        if defined?(AppConfig)
+          chain = AppConfig.environment.certificate_authorities.get
+          files << chain unless chain.nil?
+        end
         pairs = files.map do |name|
           File.open(name, "r:UTF-8") do |f|
             pems = f.read.scan(pattern)
