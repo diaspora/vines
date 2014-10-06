@@ -20,9 +20,6 @@ module Vines
         command.run(opts)
       rescue SystemExit
         # do nothing
-      rescue Exception => e
-        puts e.message
-        exit(1)
       end
     end
 
