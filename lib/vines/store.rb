@@ -5,8 +5,6 @@ module Vines
   # This uses the conf/certs/*.crt files as the list of trusted root
   # CA certificates.
   class Store
-    include Vines::Log
-
     @@sources = nil
 
     # Create a certificate store to read certificate files from the given
@@ -57,16 +55,25 @@ module Vines
       @@sources ||= begin
         pattern = /-{5}BEGIN CERTIFICATE-{5}\n.*?-{5}END CERTIFICATE-{5}\n/m
         files = Dir[File.join(@dir, '*.crt')]
-        files << AppConfig.environment.certificate_authorities if defined?(AppConfig)
+        if defined?(AppConfig)
+          chain = AppConfig.environment.certificate_authorities.get
+          files << chain unless chain.nil?
+        end
         pairs = files.map do |name|
-          File.open(name, "r:UTF-8") do |f|
-            pems = f.read.scan(pattern)
-            certs = pems.map {|pem| OpenSSL::X509::Certificate.new(pem) }
-            certs.reject! {|cert| cert.not_after < Time.now }
-            [name, certs]
+          begin
+            File.open(name, "r:UTF-8") do |f|
+              pems = f.read.scan(pattern)
+              certs = pems.map {|pem| OpenSSL::X509::Certificate.new(pem) }
+              certs.reject! {|cert| cert.not_after < Time.now }
+              [name, certs]
+            end
+          rescue ArgumentError => e
+            puts "Skipping '#{name}' cause of '#{e.message.to_s}'! "+
+                 "Checkout https://wiki.diasporafoundation.org/Vines#FAQ "+
+                 "for further instructions."
           end
         end
-        Hash[pairs]
+        Hash[pairs.compact]
       end
       @@sources.values.flatten
     end
@@ -121,9 +128,9 @@ module Vines
           end
         end
       end
-      log.warn("Your're using vines without a certificate! "+
-               "Checkout https://wiki.diasporafoundation.org/Vines#Certificates "+
-               "for further instructions.")
+      puts "Your're using vines without a certificate! "+
+           "Checkout https://wiki.diasporafoundation.org/Vines#Certificates "+
+           "for further instructions."
       nil
     end
 
