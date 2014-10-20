@@ -215,7 +215,7 @@ module Vines
           # TODO Make the group name configurable by the user
           # https://github.com/diaspora/vines/issues/39
           group_name = "External XMPP Contacts"
-          matches = Sql::Aspect.find_by_name(group_name)
+          matches = Sql::Aspect.where(:name => group_name).count
           if matches > 0
             group_name = "#{group_name} (#{matches + 1})"
           end
