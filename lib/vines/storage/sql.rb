@@ -7,7 +7,22 @@ module Vines
 
       register :sql
 
-      class Person < ActiveRecord::Base; end
+      class Profile < ActiveRecord::Base
+        belongs_to :person
+      end
+      class Person < ActiveRecord::Base
+        has_one :profile
+
+        def local?
+          !self.owner_id.nil?
+        end
+
+        def name(opts = {})
+          self.profile.first_name.blank? && self.profile.last_name.blank? ?
+            self.diaspora_handle : "#{self.profile.first_name.to_s.strip} #{self.profile.last_name.to_s.strip}".strip
+        end
+      end
+
       class Aspect < ActiveRecord::Base
         belongs_to :users
 
@@ -171,13 +186,20 @@ module Vines
       with_connection :save_user
 
       def find_vcard(jid)
-        # not supported yet
-        nil
+        jid = JID.new(jid).bare.to_s
+        return if jid.empty?
+        person = Sql::Person.find_by_diaspora_handle(jid)
+        return unless person.local?
+        Nokogiri::XML(
+          build_vcard(person)
+        ).root.to_xml rescue nil
       end
       with_connection :find_vcard
 
       def save_vcard(jid, card)
-        # not supported yet
+        # NOTE this is not supported. If you'd like to change your
+        # vcard details you can edit it via diaspora-web-interface
+        nil
       end
       with_connection :save_vcard
 
@@ -217,6 +239,22 @@ module Vines
           jid = JID.new(jid).bare.to_s
           clause = 'user_id=(select id from users where jid=?) and root=? and namespace=?'
           Sql::ChatFragment.where(clause, jid, node.name, node.namespace.href).first
+        end
+
+        def build_vcard(person)
+          doc = Nokogiri::XML::Builder.new
+          doc.vCard('xmlns' => 'vcard-temp') do |xml|
+            xml.send(:"FN", person.name) if person.name
+            xml.send(:"N") do |sub|
+              sub.send(:"FAMILY", person.profile.last_name) if person.profile.last_name
+              sub.send(:"GIVEN", person.profile.first_name) if person.profile.first_name
+            end if (person.profile.last_name? || person.profile.first_name?)
+            xml.send(:"URL", person.url) if person.url
+            xml.send(:"PHOTO") do |sub|
+              sub.send(:"EXTVAL", person.profile.image_url)
+            end if person.profile.image_url
+          end
+          doc.to_xml
         end
 
         def get_diaspora_flags(contact)
