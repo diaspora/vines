@@ -22,6 +22,8 @@ describe Vines::Storage::Sql do
   before do
     @test_user = {
       :name => "test",
+      :url => "http://remote.host/",
+      :image_url => "http://path.to/image.png",
       :jid => "test@local.host",
       :email => "test@test.de",
       :password => "$2a$10$c2G6rHjGeamQIOFI0c1/b.4mvFBw4AfOtgVrAkO1QPMuAyporj5e6", # pppppp
@@ -37,10 +39,18 @@ describe Vines::Storage::Sql do
       authentication_token: @test_user[:token]
     ).save
     Vines::Storage::Sql::Person.new(
+      owner_id: 1,
       guid: "1697a4b0198901321e9b10e6ba921ce9",
-      url: "http://remote.host/",
+      url: @test_user[:url],
       serialized_public_key: "some pub key",
-      diaspora_handle: "test2@remote.host"
+      diaspora_handle: @test_user[:jid]
+    ).save
+    Vines::Storage::Sql::Profile.new(
+      person_id: 1,
+      last_name: "Hirsch",
+      first_name: "Harry",
+      diaspora_handle: @test_user[:jid],
+      image_url: @test_user[:image_url]
     ).save
     Vines::Storage::Sql::Contact.new(
       user_id: 1,
@@ -131,6 +141,27 @@ describe Vines::Storage::Sql do
       user = db.authenticate(@test_user[:jid], @test_user[:token])
       assert (user != nil), "no user found"
       assert_equal @test_user[:name], user.name
+    end
+  end
+
+  def test_find_vcard
+    fibered do
+      db = storage
+      xml = db.find_vcard(@test_user[:jid])
+      assert (xml != nil), "no vcard found"
+
+      doc = node(xml)
+      assert_equal "Harry Hirsch", doc.search("FN").text
+      assert_equal "Harry", doc.search("GIVEN").text
+      assert_equal "Hirsch", doc.search("FAMILY").text
+      assert_equal @test_user[:url], doc.search("URL").text
+      assert_equal @test_user[:image_url], doc.search("EXTVAL").text
+    end
+  end
+
+  def test_save_vcard
+    fibered do
+      assert_nil storage.save_vcard(@test_user[:jid], "<vCard></vCard>")
     end
   end
 

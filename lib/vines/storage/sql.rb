@@ -187,12 +187,11 @@ module Vines
 
       def find_vcard(jid)
         jid = JID.new(jid).bare.to_s
-        return if jid.empty?
+        return nil if jid.empty?
         person = Sql::Person.find_by_diaspora_handle(jid)
-        return unless person.local?
-        Nokogiri::XML(
-          build_vcard(person)
-        ).root.to_xml rescue nil
+        return nil unless person.nil? || person.local?
+
+        build_vcard(person)
       end
       with_connection :find_vcard
 
@@ -242,8 +241,8 @@ module Vines
         end
 
         def build_vcard(person)
-          doc = Nokogiri::XML::Builder.new
-          doc.vCard('xmlns' => 'vcard-temp') do |xml|
+          builder = Nokogiri::XML::Builder.new
+          builder.vCard('xmlns' => 'vcard-temp') do |xml|
             xml.send(:"FN", person.name) if person.name
             xml.send(:"N") do |sub|
               sub.send(:"FAMILY", person.profile.last_name) if person.profile.last_name
@@ -254,7 +253,8 @@ module Vines
               sub.send(:"EXTVAL", person.profile.image_url)
             end if person.profile.image_url
           end
-          doc.to_xml
+
+          builder.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
         end
 
         def get_diaspora_flags(contact)
