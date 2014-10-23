@@ -58,8 +58,6 @@ module Vines
 
       class ChatContact < ActiveRecord::Base
         belongs_to :users
-
-        serialize :groups, JSON
       end
 
       class ChatFragment < ActiveRecord::Base
@@ -128,7 +126,7 @@ module Vines
               jid: contact.jid,
               name: contact.name,
               subscription: contact.subscription,
-              groups: contact.groups,
+              groups: get_external_groups,
               ask: contact.ask)
           end
         end if xuser
@@ -163,7 +161,7 @@ module Vines
             name: fresh.name,
             ask: fresh.ask,
             subscription: fresh.subscription,
-            groups: fresh.groups)
+            groups: get_external_groups)
         end
 
         # add new contacts to roster
@@ -178,7 +176,7 @@ module Vines
               name: contact.name,
               ask: contact.ask,
               subscription: contact.subscription,
-              groups: contact.groups) unless jids.include?(contact.jid.bare.to_s)
+              groups: get_external_groups) unless jids.include?(contact.jid.bare.to_s)
           end
         }
         xuser.save
@@ -232,6 +230,17 @@ module Vines
         def user_by_jid(jid)
           name = JID.new(jid).node
           Sql::User.find_by_username(name)
+        end
+
+        def get_external_groups
+          # TODO Make the group name configurable by the user
+          # https://github.com/diaspora/vines/issues/39
+          group_name = "External XMPP Contacts"
+          matches = Sql::Aspect.where(:name => group_name).count
+          if matches > 0
+            group_name = "#{group_name} (#{matches + 1})"
+          end
+          [ group_name ]
         end
 
         def fragment_by_jid(jid, node)
