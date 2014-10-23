@@ -41,10 +41,33 @@ module SqlSchema
         t.boolean  "closed_account",        :default => false
         t.integer  "fetch_status",          :default => 0
       end
-      
+
       add_index "people", ["diaspora_handle"], :name => "index_people_on_diaspora_handle", :unique => true
       add_index "people", ["guid"], :name => "index_people_on_guid", :unique => true
       add_index "people", ["owner_id"], :name => "index_people_on_owner_id", :unique => true
+
+      create_table "profiles", force: true do |t|
+        t.string   "diaspora_handle"
+        t.string   "first_name",       limit: 127
+        t.string   "last_name",        limit: 127
+        t.string   "image_url"
+        t.string   "image_url_small"
+        t.string   "image_url_medium"
+        t.date     "birthday"
+        t.string   "gender"
+        t.text     "bio"
+        t.boolean  "searchable",                   default: true,  null: false
+        t.integer  "person_id",                                    null: false
+        t.datetime "created_at",                                   null: false
+        t.datetime "updated_at",                                   null: false
+        t.string   "location"
+        t.string   "full_name",        limit: 70
+        t.boolean  "nsfw",                         default: false
+      end
+
+      add_index "profiles", ["full_name", "searchable"], name: "index_profiles_on_full_name_and_searchable", using: :btree
+      add_index "profiles", ["full_name"], name: "index_profiles_on_full_name", using: :btree
+      add_index "profiles", ["person_id"], name: "index_profiles_on_person_id", using: :btree
 
       create_table "aspects", :force => true do |t|
         t.string   "name",                               :null => false
