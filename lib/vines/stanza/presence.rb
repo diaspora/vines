@@ -18,7 +18,9 @@ module Vines
         unless self['type'].nil?
           raise StanzaErrors::BadRequest.new(self, 'modify')
         end
-        check_offline_messages(stream.last_broadcast_presence)
+        if Config.instance.max_offline_msgs > 0
+          check_offline_messages(stream.last_broadcast_presence)
+        end
         dir = outbound? ? 'outbound' : 'inbound'
         method("#{dir}_broadcast_presence").call
       end
