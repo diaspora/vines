@@ -210,7 +210,15 @@ module Vines
 
       def save_message(from, to, msg)
         return if from.empty? || to.empty? || msg.empty?
-        Sql::ChatOfflineMessage.create(:from => from, :to => to, :message => msg)
+        com = Sql::ChatOfflineMessage
+        current = com.count(:from => from, :to => to)
+        unless current < Config.instance.max_offline_msgs
+          com.where(:from => from, :to => to)
+             .order(created_at: :asc)
+             .first
+             .delete
+        end
+        com.create(:from => from, :to => to, :message => msg)
       end
 
       def find_fragment(jid, node)
