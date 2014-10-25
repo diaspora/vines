@@ -211,7 +211,7 @@ module Vines
       def save_message(from, to, msg)
         return if from.empty? || to.empty? || msg.empty?
         com = Sql::ChatOfflineMessage
-        current = com.count(:from => from, :to => to)
+        current = com.count(:to => to)
         unless current < Config.instance.max_offline_msgs
           com.where(:from => from, :to => to)
              .order(created_at: :asc)
