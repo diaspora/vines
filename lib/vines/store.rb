@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 module Vines
+  require 'filemagic'
   # An X509 certificate store that validates certificate trust chains.
   # This uses the conf/certs/*.crt files as the list of trusted root
   # CA certificates.
@@ -61,7 +62,9 @@ module Vines
         end
         pairs = files.map do |name|
           begin
-            File.open(name, "r:UTF-8") do |f|
+            fm = FileMagic.new
+            encoding = fm.file(name).split(" ")[0}
+            File.open(name, "r:#{encoding}") do |f|
               pems = f.read.scan(pattern)
               certs = pems.map {|pem| OpenSSL::X509::Certificate.new(pem) }
               certs.reject! {|cert| cert.not_after < Time.now }
