@@ -213,7 +213,7 @@ module Vines
         com = Sql::ChatOfflineMessage
         current = com.count(:to => to)
         unless current < Config.instance.max_offline_msgs
-          com.where(:from => from, :to => to)
+          com.where(:to => to)
              .order(created_at: :asc)
              .first
              .delete
