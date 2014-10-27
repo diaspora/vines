@@ -27,7 +27,7 @@ module Vines
 
       def check_offline_messages(presence)
         priority = presence.xpath("//priority").text rescue nil
-        unless priority.nil?
+        if priority != nil && priority == "1"
           jid = stream.user.jid.to_s
           messages = storage.find_messages(jid)
           messages.each do |message|
