@@ -34,6 +34,18 @@ module Vines
       def save_fragment(jid, node)
         # do nothing
       end
+
+      def find_messages(jid)
+        {}
+      end
+
+      def save_message(from, to, message)
+        # do nothing
+      end
+
+      def destroy_message(id)
+        # do nothing
+      end
     end
   end
 end

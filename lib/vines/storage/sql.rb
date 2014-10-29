@@ -216,6 +216,7 @@ module Vines
         end
         return results
       end
+      with_connection :find_messages
 
       def save_message(from, to, msg)
         return if from.empty? || to.empty? || msg.empty?
@@ -229,12 +230,14 @@ module Vines
         end
         com.create(:from => from, :to => to, :message => msg)
       end
+      with_connection :save_message
 
       def destroy_message(id)
         id = id.to_i rescue nil
         return if id.nil?
         Sql::ChatOfflineMessage.find(id).destroy
       end
+      with_connection :destroy_message
 
       def find_fragment(jid, node)
         jid = JID.new(jid).bare.to_s

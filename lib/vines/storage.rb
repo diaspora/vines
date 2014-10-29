@@ -212,6 +212,37 @@ module Vines
       raise 'subclass must implement'
     end
 
+    # Check whether offline messages are available for the user
+    # jid      - The String or JID of the user, possibly nil. This may be
+    #            either a bare JID or full JID. Implementations of this method
+    #            must convert the JID to a bare JID before searching for
+    #            offline messages.
+    #
+    # Returns hash
+    def find_messages(jid)
+      raise 'subclass must implement'
+    end
+
+    # Save the offline message to the database, and return when the save is complete.
+    #
+    # from      - The String or JID of the user.
+    # to        - The String or JID of the user.
+    # message   - The message you want to store.
+    #
+    # Returns nothing.
+    def save_mesage(from, to, message)
+      raise 'subclass must implement'
+    end
+
+    # Delete a offline message from database.
+    #
+    # id       - The identifier of the offline message
+    #
+    # Returns nothing.
+    def destroy_message(id)
+      raise 'subclass must implement'
+    end
+
     private
 
     # Determine if any of the arguments are nil or empty strings.
