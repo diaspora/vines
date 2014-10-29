@@ -113,7 +113,7 @@ describe Vines::Storage::Sql do
       db = storage
 
       assert_nil db.find_messages("")
-      assert_equal 0, db.find_messages("someone@inthe.void").count
+      assert_equal 0, db.find_messages("someone@inthe.void").keys.count
 
       Vines::Storage::Sql::ChatOfflineMessage.new(
         :from => @test_user[:jid],
@@ -122,10 +122,10 @@ describe Vines::Storage::Sql do
       ).save
 
       msgs = db.find_messages("someone@inthe.void")
-      assert_equal 1, msgs.count
-      assert_equal "someone@inthe.void", msgs.first.to
-      assert_equal @test_user[:jid], msgs.first.from
-      assert_equal "test", msgs.first.message
+      assert_equal 1, msgs.keys.count
+      assert_equal "someone@inthe.void", msgs[1][:to]
+      assert_equal @test_user[:jid], msgs[1][:from]
+      assert_equal "test", msgs[1][:message]
     end
   end
 

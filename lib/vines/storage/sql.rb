@@ -205,7 +205,16 @@ module Vines
       def find_messages(jid)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
-        Sql::ChatOfflineMessage.where(:to => jid)
+        results = Hash.new
+        Sql::ChatOfflineMessage.where(:to => jid).each do |r|
+          results[r.id] = {
+            :from => r.from,
+            :to => r.to,
+            :message => r.message,
+            :created_at => r.created_at
+          }
+        end
+        return results
       end
 
       def save_message(from, to, msg)

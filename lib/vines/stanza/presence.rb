@@ -29,20 +29,21 @@ module Vines
         priority = presence.xpath("//priority").text.to_i rescue nil
         if priority != nil && priority >= 0
           jid = stream.user.jid.to_s
-          messages = storage.find_messages(jid)
-          messages.each do |message|
-            stamp = Time.parse(message.created_at.to_s)
+          storage.find_messages(jid).each do |id, m|
+            stamp = Time.parse(m[:created_at].to_s)
             doc = Nokogiri::XML::Builder.new
-            doc.message(:type => "chat", :from => message.from, :to => message.to) do |m|
-              m.send(:"body", message.message)
-              m.send(:"delay", "Offline Storage",
-                     :xmlns => NAMESPACES[:delay],
-                     :from => message.from,
-                     :stamp => stamp.iso8601)
+            doc.message(:type => "chat", :from => m[:from], :to => m[:to]) do |msg|
+              msg.send(:"body", m[:message])
+              msg.send(:"delay", "Offline Storage",
+                       :xmlns => NAMESPACES[:delay],
+                       :from => m[:from],
+                       :stamp => stamp.iso8601)
             end
             xml = doc.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
             stream.write(xml)
-            message.destroy
+            # after delivering it we should
+            # delete the message from database
+            storage.destroy_message(id)
           end
         end
       end
