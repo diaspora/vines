@@ -5,7 +5,9 @@ require 'storage/sql_schema'
 
 module Vines
   class Config
-    def instance.max_offline_msgs; 1; end
+    def instance.max_offline_msgs
+      return 1
+    end
   end
 end
 
