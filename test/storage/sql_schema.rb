@@ -125,6 +125,13 @@ module SqlSchema
       
       add_index "chat_fragments", ["user_id"], :name => "index_chat_fragments_on_user_id", :unique => true
 
+      create_table "chat_offline_messages", force: true do |t|
+        t.string "from", null: false
+        t.string "to", null: false
+        t.text "message", null: false
+        t.datetime "created_at", null: false
+      end
+
       create_table "users", :force => true do |t|
         t.string   "username"
         t.text     "serialized_private_key"

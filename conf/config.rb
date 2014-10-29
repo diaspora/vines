@@ -12,6 +12,10 @@ Vines::Config.configure do
   # `vines init`.
   certs 'conf/certs'
 
+  # Set the maximum of offline messages stored per user.
+  # If it exceeds, old messages will be deleted.
+  max_offline_msgs 150
+
   host 'diaspora' do
     cross_domain_messages true
     accept_self_signed false

@@ -35,6 +35,7 @@ describe Vines::Stanza::Iq::DiscoInfo do
             <identity category="server" type="im"/>
             <feature var="http://jabber.org/protocol/disco#info"/>
             <feature var="http://jabber.org/protocol/disco#items"/>
+            <feature var="msgoffline"/>
             <feature var="urn:xmpp:ping"/>
             <feature var="vcard-temp"/>
             <feature var="jabber:iq:version"/>
@@ -59,6 +60,7 @@ describe Vines::Stanza::Iq::DiscoInfo do
             <identity category="server" type="im"/>
             <feature var="http://jabber.org/protocol/disco#info"/>
             <feature var="http://jabber.org/protocol/disco#items"/>
+            <feature var="msgoffline"/>
             <feature var="urn:xmpp:ping"/>
             <feature var="vcard-temp"/>
             <feature var="jabber:iq:version"/>

@@ -56,6 +56,8 @@ module Vines
         has_one :person, :foreign_key => :owner_id
       end
 
+      class ChatOfflineMessage < ActiveRecord::Base; end
+
       class ChatContact < ActiveRecord::Base
         belongs_to :users
       end
@@ -199,6 +201,43 @@ module Vines
         nil
       end
       with_connection :save_vcard
+
+      def find_messages(jid)
+        jid = JID.new(jid).bare.to_s
+        return if jid.empty?
+        results = Hash.new
+        Sql::ChatOfflineMessage.where(:to => jid).each do |r|
+          results[r.id] = {
+            :from => r.from,
+            :to => r.to,
+            :message => r.message,
+            :created_at => r.created_at
+          }
+        end
+        return results
+      end
+      with_connection :find_messages
+
+      def save_message(from, to, msg)
+        return if from.empty? || to.empty? || msg.empty?
+        com = Sql::ChatOfflineMessage
+        current = com.count(:to => to)
+        unless current < Config.instance.max_offline_msgs
+          com.where(:to => to)
+             .order(created_at: :asc)
+             .first
+             .delete
+        end
+        com.create(:from => from, :to => to, :message => msg)
+      end
+      with_connection :save_message
+
+      def destroy_message(id)
+        id = id.to_i rescue nil
+        return if id.nil?
+        Sql::ChatOfflineMessage.find(id).destroy
+      end
+      with_connection :destroy_message
 
       def find_fragment(jid, node)
         jid = JID.new(jid).bare.to_s

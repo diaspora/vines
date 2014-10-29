@@ -77,6 +77,18 @@ module Vines
         save(file, node.to_xml)
       end
 
+      def find_messages(jid)
+        {}
+      end
+
+      def save_message(from, to, message)
+        # do nothing
+      end
+
+      def destroy_message(id)
+        # do nothing
+      end
+
       private
 
       # Resolves a relative file name into an absolute path inside the

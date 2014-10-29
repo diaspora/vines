@@ -3,6 +3,14 @@
 require 'test_helper'
 require 'storage/sql_schema'
 
+module Vines
+  class Config
+    def instance.max_offline_msgs
+      return 1
+    end
+  end
+end
+
 module Diaspora
   class Application < Rails::Application
     def config.database_configuration
@@ -73,6 +81,70 @@ describe Vines::Storage::Sql do
   after do
     db = Rails.application.config.database_configuration["development"]["database"]
     File.delete(db) if File.exist?(db)
+  end
+
+  def test_save_message
+    fibered do
+      db = storage
+
+      assert_nil db.save_message("", "", "")
+      assert_nil db.save_message("dude@valid@jid", "dude2@valid.jid", "")
+      assert_nil db.save_message("dude@valid@jid", "", "test")
+      assert_nil db.save_message("", "dude2@valid.jid", "test")
+
+      db.save_message(@test_user[:jid], "someone@inthe.void", "test")
+
+      msgs = Vines::Storage::Sql::ChatOfflineMessage.where(:to => "someone@inthe.void")
+      assert_equal 1, msgs.count
+      assert_equal "someone@inthe.void", msgs.first.to
+      assert_equal @test_user[:jid], msgs.first.from
+      assert_equal "test", msgs.first.message
+
+      db.save_message("someone@else.void", "someone@inthe.void", "test2")
+
+      msgs = Vines::Storage::Sql::ChatOfflineMessage.where(:to => "someone@inthe.void")
+      assert_equal 1, msgs.count # due max limit equals one (see max_offline_msgs)
+      assert_equal "someone@inthe.void", msgs.first.to
+      assert_equal "someone@else.void", msgs.first.from
+      assert_equal "test2", msgs.first.message # should be latest message
+    end
+  end
+
+  def test_find_messages
+    fibered do
+      db = storage
+
+      assert_nil db.find_messages("")
+      assert_equal 0, db.find_messages("someone@inthe.void").keys.count
+
+      Vines::Storage::Sql::ChatOfflineMessage.new(
+        :from => @test_user[:jid],
+        :to => "someone@inthe.void",
+        :message => "test"
+      ).save
+
+      msgs = db.find_messages("someone@inthe.void")
+      assert_equal 1, msgs.keys.count
+      assert_equal "someone@inthe.void", msgs[1][:to]
+      assert_equal @test_user[:jid], msgs[1][:from]
+      assert_equal "test", msgs[1][:message]
+    end
+  end
+
+  def test_destroy_message
+    fibered do
+      db = storage
+      com = Vines::Storage::Sql::ChatOfflineMessage
+      com.new(:from => @test_user[:jid],
+        :to => "someone@inthe.void",
+        :message => "test"
+      ).save
+
+      db.destroy_message(1)
+
+      count = Vines::Storage::Sql::ChatOfflineMessage.count(:id => 1)
+      assert_equal 0, count
+    end
   end
 
   def test_aspect_chat_enabled

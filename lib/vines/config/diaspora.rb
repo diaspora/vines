@@ -9,6 +9,8 @@ Vines::Config.configure do
 
   certs AppConfig.chat.server.certs.to_s
 
+  max_offline_msgs AppConfig.chat.server.max_offline_msgs.to_i
+
   host diaspora_domain do
     cross_domain_messages AppConfig.chat.server.cross_domain_messages
     accept_self_signed AppConfig.chat.server.accept_self_signed

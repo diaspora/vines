@@ -21,6 +21,7 @@ module Vines
     end
 
     def initialize(&block)
+      @max_offline_msgs = 150
       @certs = File.expand_path('conf/certs')
       @vhosts, @ports, @cluster = {}, {}, nil
       @null = Storage::Null.new
@@ -31,6 +32,10 @@ module Vines
 
     def certs(dir=nil)
       dir ? @certs = File.expand_path(dir) : @certs
+    end
+
+    def max_offline_msgs(count=nil)
+      count ? @max_offline_msgs = count : @max_offline_msgs
     end
 
     def host(*names, &block)

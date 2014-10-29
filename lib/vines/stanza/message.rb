@@ -24,8 +24,11 @@ module Vines
           recipients = stream.connected_resources(to)
           if recipients.empty?
             if user = storage(to.domain).find_user(to)
-              # TODO Implement offline messaging storage
-              raise StanzaErrors::ServiceUnavailable.new(self, 'cancel')
+              if Config.instance.max_offline_msgs > 0 && self[TYPE].match(/(chat|normal)/i)
+                storage(to.domain).save_message(stream.user.jid.bare.to_s, to.to_s, @node.text)
+              else
+                raise StanzaErrors::ServiceUnavailable.new(self, 'cancel')
+              end
             end
           else
             broadcast(recipients)

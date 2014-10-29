@@ -18,8 +18,34 @@ module Vines
         unless self['type'].nil?
           raise StanzaErrors::BadRequest.new(self, 'modify')
         end
+        if Config.instance.max_offline_msgs > 0
+          check_offline_messages(stream.last_broadcast_presence)
+        end
         dir = outbound? ? 'outbound' : 'inbound'
         method("#{dir}_broadcast_presence").call
+      end
+
+      def check_offline_messages(presence)
+        priority = presence.xpath("//priority").text.to_i rescue nil
+        if priority != nil && priority >= 0
+          jid = stream.user.jid.to_s
+          storage.find_messages(jid).each do |id, m|
+            stamp = Time.parse(m[:created_at].to_s)
+            doc = Nokogiri::XML::Builder.new
+            doc.message(:type => "chat", :from => m[:from], :to => m[:to]) do |msg|
+              msg.send(:"body", m[:message])
+              msg.send(:"delay", "Offline Storage",
+                       :xmlns => NAMESPACES[:delay],
+                       :from => m[:from],
+                       :stamp => stamp.iso8601)
+            end
+            xml = doc.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+            stream.write(xml)
+            # after delivering it we should
+            # delete the message from database
+            storage.destroy_message(id)
+          end
+        end
       end
 
       def outbound?
