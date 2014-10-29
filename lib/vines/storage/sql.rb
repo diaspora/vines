@@ -221,6 +221,12 @@ module Vines
         com.create(:from => from, :to => to, :message => msg)
       end
 
+      def destroy_message(id)
+        id = id.to_i rescue nil
+        return if id.nil?
+        Sql::ChatOfflineMessage.find(id).destroy
+      end
+
       def find_fragment(jid, node)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?

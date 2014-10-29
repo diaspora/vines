@@ -129,6 +129,22 @@ describe Vines::Storage::Sql do
     end
   end
 
+  def test_destroy_message
+    fibered do
+      db = storage
+      com = Vines::Storage::Sql::ChatOfflineMessage
+      com.new(:from => @test_user[:jid],
+        :to => "someone@inthe.void",
+        :message => "test"
+      ).save
+
+      db.destroy_message(1)
+
+      count = Vines::Storage::Sql::ChatOfflineMessage.count(:id => 1)
+      assert_equal 0, count
+    end
+  end
+
   def test_aspect_chat_enabled
     fibered do
       db = storage
