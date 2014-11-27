@@ -243,6 +243,15 @@ module Vines
       raise 'subclass must implement'
     end
 
+    # Retrieve the avatar url by jid.
+    #
+    # jid      - The String or JID of the user.
+    #
+    # Returns string
+    def find_avatar_by_jid(jid)
+      raise 'subclass must implement'
+    end
+
     private
 
     # Determine if any of the arguments are nil or empty strings.
