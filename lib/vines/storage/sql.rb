@@ -260,6 +260,15 @@ module Vines
       end
       with_connection :save_fragment
 
+      def find_avatar_by_jid(jid)
+        jid = JID.new(jid).bare.to_s
+        return nil if jid.empty?
+        person = Sql::Person.find_by_diaspora_handle(jid)
+        return nil unless person.nil? || person.local?
+        person.profile.image_url rescue nil
+      end
+      with_connection :find_avatar_by_jid
+
       private
         def establish_connection
           ActiveRecord::Base.logger = log # using vines logger
