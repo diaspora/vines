@@ -230,7 +230,7 @@ module Vines
     # message   - The message you want to store.
     #
     # Returns nothing.
-    def save_mesage(from, to, message)
+    def save_message(from, to, message)
       raise 'subclass must implement'
     end
 
