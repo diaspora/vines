@@ -170,21 +170,12 @@ module Vines
       end
 
       def override_vcard_update
-        tag_exists = false # NOTE count nodeSets instead of using that approach
         image_path = storage.find_avatar_by_jid(@node['from'])
         return if image_path.nil?
-        extval = "<EXTVAL>#{image_path}</EXTVAL>"
-        @node.xpath("//presence").children.each do |p|
-          if p.name.casecmp("x") == 0
-            p.children.each do |x|
-              if x.name.casecmp("photo") == 0
-                tag_exists = true
-                x << extval
-              end
-            end
-            p << "<photo>#{extval}</photo>" unless tag_exists
-          end
-        end
+
+        x = @node.root.xpath("//xmlns:x", 'xmlns' => 'vcard-temp:x:update').first
+        x.children.remove # force overriding everything
+        x << "<photo><EXTVAL>#{image_path}</EXTVAL></photo>"
       end
     end
   end
