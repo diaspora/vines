@@ -30,6 +30,7 @@ module Vines
     :offline          => 'msgoffline'.freeze,
     :bosh             => 'urn:xmpp:xbosh'.freeze,
     :vcard            => 'vcard-temp'.freeze,
+    :vcard_update     => 'vcard-temp:x:update'.freeze,
     :si               => 'http://jabber.org/protocol/si'.freeze,
     :byte_streams     => 'http://jabber.org/protocol/bytestreams'.freeze
   }.freeze
