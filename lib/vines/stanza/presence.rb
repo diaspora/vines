@@ -172,9 +172,12 @@ module Vines
       def override_vcard_update
         image_path = storage.find_avatar_by_jid(@node['from'])
         return if image_path.nil?
-        x = @node.root.xpath("//xmlns:x", 'xmlns' => NAMESPACES[:vcard_update]).first
-        x.children.remove # force overriding everything
-        x << "<photo><EXTVAL>#{image_path}</EXTVAL></photo>"
+        node = @node.root.xpath("//xmlns:x", 'xmlns' => NAMESPACES[:vcard_update]).first
+        if node.empty?
+          node << "<x xmlns=\"#{NAMESPACES[:vcard_update]}\"/>"
+        end
+        node.children.remove # force overriding everything
+        node << "<photo><EXTVAL>#{image_path}</EXTVAL></photo>"
       end
     end
   end
