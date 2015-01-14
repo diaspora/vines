@@ -185,6 +185,10 @@ describe Vines::Storage::Sql do
       assert (user != nil), "no user found"
       assert_equal @test_user[:name], user.name
 
+      user.roster do |contact|
+        assert_equal "Harry Hirsch", contact.name
+      end
+
       user = db.find_user(Vines::JID.new(@test_user[:jid]))
       assert (user != nil), "no user found"
       assert_equal @test_user[:name], user.name

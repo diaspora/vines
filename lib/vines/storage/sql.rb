@@ -112,10 +112,14 @@ module Vines
           # add diaspora contacts
           xuser.contacts.chat_enabled.each do |contact|
             handle = contact.person.diaspora_handle
+            profile = contact.person.profile
+            name = profile.first_name.nil? && profile.last_name.nil? ? handle.gsub(/\@.*?$/, '') : ""
+            name << "#{profile.first_name} " unless profile.first_name.nil?
+            name << "#{profile.last_name}" unless profile.last_name.nil?
             ask, subscription, groups = get_diaspora_flags(contact)
             user.roster << Vines::Contact.new(
               jid: handle,
-              name: handle.gsub(/\@.*?$/, ''),
+              name: name,
               subscription: subscription,
               from_diaspora: true,
               groups: groups,
