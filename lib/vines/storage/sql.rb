@@ -113,9 +113,8 @@ module Vines
           xuser.contacts.chat_enabled.each do |contact|
             handle = contact.person.diaspora_handle
             profile = contact.person.profile
-            name = profile.first_name.nil? && profile.last_name.nil? ? handle.gsub(/\@.*?$/, '') : ""
-            name << "#{profile.first_name} " unless profile.first_name.nil?
-            name << "#{profile.last_name}" unless profile.last_name.nil?
+            name = "#{profile.first_name} #{profile.last_name}"
+            name = handle.gsub(/\@.*?$/, '') if name.strip.empty?
             ask, subscription, groups = get_diaspora_flags(contact)
             user.roster << Vines::Contact.new(
               jid: handle,
