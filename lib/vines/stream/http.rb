@@ -59,8 +59,9 @@ module Vines
             @session.request(request)
             @nodes.push(body)
           end
+        else
+          request.reply('It works!', 'text/plain')
         end
-        request.reply('It works!', 'text/plain')
       end
 
       # Alias the Stream#write method before overriding it so we can call
