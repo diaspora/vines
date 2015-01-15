@@ -69,6 +69,12 @@ module Vines
           stream.user.subscribed_from?(to) ? stream.available_resources(to) : []
         end
 
+        # NOTE overriding vCard information is not concurring
+        # with XEP-153 due the fact that the user can only update
+        # his vCard via the Diaspora environment we should act
+        # the same way for the avatar update
+        override_vcard_update
+
         broadcast(recipients)
         broadcast(stream.available_resources(stream.user.jid))
 
@@ -161,6 +167,17 @@ module Vines
         stream.user.jid.bare.tap do |bare|
           self['from'] = bare.to_s
         end
+      end
+
+      def override_vcard_update
+        image_path = storage.find_avatar_by_jid(@node['from'])
+        return if image_path.nil?
+        node = @node.root.xpath("//xmlns:x", 'xmlns' => NAMESPACES[:vcard_update]).first
+        if node.empty?
+          node << "<x xmlns=\"#{NAMESPACES[:vcard_update]}\"/>"
+        end
+        node.children.remove # force overriding everything
+        node << "<photo><EXTVAL>#{image_path}</EXTVAL></photo>"
       end
     end
   end
