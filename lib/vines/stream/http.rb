@@ -46,20 +46,21 @@ module Vines
       end
 
       def process_request(request)
-        if request.path == self.bind && request.options?
-          request.reply_to_options
-        elsif request.path == self.bind
-          body = Nokogiri::XML(request.body).root
-          if session = Sessions[body['sid']]
-            @session = session
-          else
-            @session = Http::Session.new(self)
+        if request.method == 'POST'
+          if request.path == self.bind && request.options?
+            request.reply_to_options
+          elsif request.path == self.bind
+            body = Nokogiri::XML(request.body).root
+            if session = Sessions[body['sid']]
+              @session = session
+            else
+              @session = Http::Session.new(self)
+            end
+            @session.request(request)
+            @nodes.push(body)
           end
-          @session.request(request)
-          @nodes.push(body)
-        else
-          request.reply_with_file(self.root)
         end
+        request.reply('It works!', 'text/plain')
       end
 
       # Alias the Stream#write method before overriding it so we can call
