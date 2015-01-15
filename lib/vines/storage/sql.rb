@@ -265,9 +265,9 @@ module Vines
         return nil if jid.empty?
 
         person = Sql::Person.find_by_diaspora_handle(jid)
-        unless (person.nil? || person.profile.nil? || person.local?)
-          return nil
-        end
+        return nil if person.nil?
+        return nil if person.profile.nil?
+        return nil unless person.local?
         person.profile.image_url
       end
       with_connection :find_avatar_by_jid

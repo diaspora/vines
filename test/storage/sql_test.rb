@@ -110,6 +110,18 @@ describe Vines::Storage::Sql do
     end
   end
 
+  def test_find_avatar_by_jid
+    fibered do
+      db = storage
+
+      assert_nil db.find_avatar_by_jid("")
+      assert_nil db.find_avatar_by_jid("someone@inthe.void")
+
+      image_path = db.find_avatar_by_jid(@test_user[:jid])
+      assert_equal @test_user[:image_url], image_path
+    end
+  end
+
   def test_find_messages
     fibered do
       db = storage
