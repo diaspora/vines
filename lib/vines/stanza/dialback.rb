@@ -24,6 +24,7 @@ module Vines
 
         type = Kit.dialback_key(secret, from, to, id) == key ? VALID_TYPE : INVALID_TYPE
         @stream.write(%Q{<db:verify from="#{to}" to="#{from}" id="#{id}" type="#{type}" />})
+        @stream.router.delete(@stream)
       end
     end
   end
