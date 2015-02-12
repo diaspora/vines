@@ -150,8 +150,8 @@ module Vines
           'id'           => stream_id,
           'from'         => @domain,
           'to'           => @remote_domain,
-          'version'      => '1.0'
         }
+        attrs['version'] = '1.0' unless dialback_verify?
         write "<stream:stream %s>" % attrs.to_a.map{|k,v| "#{k}='#{v}'"}.join(' ')
       end
     end
