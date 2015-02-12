@@ -140,12 +140,14 @@ module Vines
       end
 
       def send_stream_header
+        stream_id = Kit.uuid
+        update_stream_id(stream_id)
         attrs = {
           'xmlns'        => NAMESPACES[:server],
           'xmlns:stream' => NAMESPACES[:stream],
           'xmlns:db'     => NAMESPACES[:legacy_dialback],
           'xml:lang'     => 'en',
-          'id'           => Kit.uuid,
+          'id'           => stream_id,
           'from'         => @domain,
           'to'           => @remote_domain,
           'version'      => '1.0'
