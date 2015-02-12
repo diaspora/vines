@@ -15,7 +15,7 @@ module Vines
       # yielded stream will be nil if the remote connection failed. We need to
       # use a background thread to avoid blocking the server on DNS SRV
       # lookups.
-      def self.start(config, to, from, &callback)
+      def self.start(config, to, from, dbv = false, &callback)
         op = proc do
           Resolv::DNS.open do |dns|
             dns.getresources("_xmpp-server._tcp.#{to}", Resolv::DNS::Resource::IN::SRV)
@@ -28,22 +28,22 @@ module Vines
               def method_missing(name); self[name]; end
             end
           end
-          Server.connect(config, to, from, srv, callback)
+          Server.connect(config, to, from, srv, dbv, callback)
         end
         EM.defer(proc { op.call rescue [] }, cb)
       end
 
-      def self.connect(config, to, from, srv, callback)
+      def self.connect(config, to, from, srv, dbv = false, callback)
         if srv.empty?
           # fiber so storage calls work properly
           Fiber.new { callback.call(nil) }.resume
         else
           begin
             rr = srv.shift
-            opts = {to: to, from: from, srv: srv, callback: callback}
+            opts = {to: to, from: from, srv: srv, dialback_verify: dbv, callback: callback}
             EM.connect(rr.target.to_s, rr.port, Server, config, opts)
           rescue => e
-            connect(config, to, from, srv, callback)
+            connect(config, to, from, srv, dbv, callback)
           end
         end
       end
@@ -57,6 +57,7 @@ module Vines
         @remote_domain = options[:to]
         @domain = options[:from]
         @srv = options[:srv]
+        @dialback_verify = options[:dialback_verify]
         @callback = options[:callback]
         @outbound = @remote_domain && @domain
         start = @outbound ? Outbound::Start.new(self) : Start.new(self)
@@ -99,10 +100,16 @@ module Vines
 
       def notify_connected
         @connected = true
-        if @callback
-          @callback.call(self)
-          @callback = nil
-        end
+        self.callback!
+        @callback = nil
+      end
+
+      def callback!
+        @callback.call(self) if @callback
+      end
+
+      def dialback_verify?
+        @dialback_verify
       end
 
       def ready?
