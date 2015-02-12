@@ -304,9 +304,11 @@ module Vines
       JID.new(jid).domain? rescue false
     end
 
-    def update_stream_id(node)
-      if Node.stream?(node) # move stream? method somewhere else?
-        @id = node['id'].freeze
+    def update_stream_id(id_or_node)
+      if id_or_node.is_a? String
+        @id = id_or_node.freeze
+      elsif Node.stream?(id_or_node) # move stream? method somewhere else?
+        @id = id_or_node['id'].freeze
       end
     end
   end
