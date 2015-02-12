@@ -294,14 +294,6 @@ module Vines
         ["#{label} stanza:".ljust(PAD), from, to, node])
     end
 
-    # Inspects the current state of the stream's state machine. Provided as a
-    # method so subclasses can override the behavior.
-    #
-    # Returns the current Stream::State.
-    def state
-      @state
-    end
-
     # Determine if this is a valid domain-only JID that can be used in
     # stream initiation stanza headers.
     #
