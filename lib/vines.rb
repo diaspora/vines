@@ -179,17 +179,18 @@ end
 
   vines/stream/server
   vines/stream/server/start
-  vines/stream/server/tls
+  vines/stream/server/auth_method
   vines/stream/server/auth_restart
   vines/stream/server/auth
   vines/stream/server/final_restart
   vines/stream/server/ready
 
   vines/stream/server/outbound/start
-  vines/stream/server/outbound/tls
-  vines/stream/server/outbound/tls_result
-  vines/stream/server/outbound/auth_restart
   vines/stream/server/outbound/auth
+  vines/stream/server/outbound/tls_result
+  vines/stream/server/outbound/authoritative
+  vines/stream/server/outbound/auth_restart
+  vines/stream/server/outbound/auth_external
   vines/stream/server/outbound/auth_external_result
   vines/stream/server/outbound/auth_dialback_result
   vines/stream/server/outbound/final_restart

@@ -5,7 +5,7 @@ module Vines
     class Server
       class Outbound
         class AuthRestart < State
-          def initialize(stream, success=Auth)
+          def initialize(stream, success=AuthExternal)
             super
           end
 
