@@ -53,6 +53,7 @@ module Vines
 
       def initialize(config, options={})
         super(config)
+        @peer_trusted = nil
         @connected = false
         @remote_domain = options[:to]
         @domain = options[:from]
@@ -73,8 +74,17 @@ module Vines
         config[:server].max_stanza_size
       end
 
+      def ssl_verify_peer(pem)
+        @store.trusted?(pem).tap {|trusted| @peer_trusted = trusted}
+        true
+      end
+
       def ssl_handshake_completed
-        close_connection unless cert_domain_matches?(@remote_domain)
+        @peer_trusted = cert_domain_matches?(@remote_domain) && @peer_trusted
+      end
+
+      def dialback_retry?
+        !@peer_trusted.nil? && !@peer_trusted
       end
 
       # Return an array of allowed authentication mechanisms advertised as
