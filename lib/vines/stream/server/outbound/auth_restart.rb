@@ -11,6 +11,13 @@ module Vines
 
           def node(node)
             raise StreamErrors::NotAuthorized unless stream?(node)
+            if stream.dialback_retry?
+              if stream.outbound_tls_required?
+                stream.close_connection
+                return
+              end
+              @success = Auth
+            end
             advance
           end
         end

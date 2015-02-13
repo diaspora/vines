@@ -53,6 +53,7 @@ module Vines
 
       def initialize(config, options={})
         super(config)
+        @outbound_tls_required = false
         @peer_trusted = nil
         @connected = false
         @remote_domain = options[:to]
@@ -85,6 +86,16 @@ module Vines
 
       def dialback_retry?
         !@peer_trusted.nil? && !@peer_trusted
+      end
+
+      def outbound_tls_required?
+        @outbound_tls_required
+      end
+
+      def outbound_tls_required(required)
+        if required.is_a? Boolean
+          @outbound_tls_required = required
+        end
       end
 
       # Return an array of allowed authentication mechanisms advertised as

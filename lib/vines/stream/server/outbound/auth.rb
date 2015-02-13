@@ -5,11 +5,17 @@ module Vines
     class Server
       class Outbound
         class Auth < State
+          REQUIRED = 'required'.freeze
+
           def initialize(stream, success=AuthDialbackResult)
             super
           end
 
           def node(node)
+            # We have to remember tls_require for
+            # closing or restarting the stream
+            stream.outbound_tls_required(tls_required?(node))
+
             if tls?(node)
               @success = TLSResult
               stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
@@ -27,6 +33,11 @@ module Vines
           end
 
           private
+
+          def tls_required?(node)
+            child = node.xpath('ns:starttls', 'ns' => NAMESPACES[:tls]).children.first
+            !child.nil? && child.name == REQUIRED
+          end
 
           def dialback?(node)
             dialback = node.xpath('ns:dialback', 'ns' => NAMESPACES[:dialback]).any?
