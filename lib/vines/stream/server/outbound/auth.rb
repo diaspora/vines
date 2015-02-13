@@ -10,11 +10,11 @@ module Vines
           end
 
           def node(node)
-            #if tls?(node) && !stream.host_known?(node)
-            #  @success = TLSResult
-            #  stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
-            #  advance
-            if dialback?(node)
+            if tls?(node)
+              @success = TLSResult
+              stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
+              advance
+            elsif dialback?(node)
               secret = Kit.auth_token
               dialback_key = Kit.dialback_key(secret, stream.remote_domain, stream.domain, stream.id)
               stream.write(%Q(<db:result from="#{stream.domain}" to="#{stream.remote_domain}">#{dialback_key}</db:result>))

@@ -13,18 +13,18 @@ module Vines
         end
 
         def node(node)
-          #if starttls?(node)
-          #  if stream.encrypt?
-          #    stream.write(PROCEED)
-          #    stream.encrypt
-          #    stream.reset
-          #    advance
-          #  else
-          #    stream.write(FAILURE)
-          #    stream.write('</stream:stream>')
-          #    stream.close_connection_after_writing
-          #  end
-          if dialback?(node)
+          if starttls?(node)
+            if stream.encrypt?
+              stream.write(PROCEED)
+              stream.encrypt
+              stream.reset
+              advance
+            else
+              stream.write(FAILURE)
+              stream.write('</stream:stream>')
+              stream.close_connection_after_writing
+            end
+          elsif dialback?(node)
             begin
               Vines::Stream::Server.start(stream.config, node[FROM], node[TO], dbv = true) do |a|
                 a.write("<db:verify from='#{node[TO]}' id='#{stream.id}' to='#{node[FROM]}'>#{node.text}</db:verify>") if a
