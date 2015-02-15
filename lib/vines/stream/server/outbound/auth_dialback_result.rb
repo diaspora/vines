@@ -30,8 +30,7 @@ module Vines
           private
 
           def result?(node)
-            result = node.name == RESULT && namespace(node) == NAMESPACES[:legacy_dialback]
-            result && node[TYPE] == VALID
+            node.name == RESULT && namespace(node) == NAMESPACES[:legacy_dialback]
           end
         end
       end

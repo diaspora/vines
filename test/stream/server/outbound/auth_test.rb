@@ -52,7 +52,7 @@ describe Vines::Stream::Server::Outbound::Auth do
   end
 
   def test_dialback_feature_only
-    node = node(%Q{<features><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></features>})
+    node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
     @stream.expect(:router, OperatorWrapper.new)
     @stream.expect(:domain, "local.host")
     @stream.expect(:remote_domain, "remote.host")

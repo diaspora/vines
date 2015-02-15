@@ -31,9 +31,10 @@ describe Vines::Stream::Server::Outbound::Authoritative do
 
   def test_valid_verification
     node = node(%Q{<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="remote.host" to="local.host" id="1234" type="valid"/>})
+    result = "<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>"
     @stream.expect(:router, @router)
     # NOTE this tests the 'inbound' stream var
-    @stream.expect(:write, nil, ["<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>"])
+    @stream.expect(:write, nil, [result])
     @stream.expect(:advance, nil, [Vines::Stream::Server::Ready])
     @stream.expect(:notify_connected, nil)
     # end
@@ -45,10 +46,11 @@ describe Vines::Stream::Server::Outbound::Authoritative do
 
   def test_invalid_verification
     node = node(%Q{<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="remote.host" to="local.host" id="1234" type="invalid"/>})
+    result = "<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>"
     @stream.expect(:router, @router)
     # NOTE this tests the 'inbound' stream var
-    @stream.expect(:write, nil, ["<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='error'><error type='cancel'><item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></db:result>"])
     @stream.expect(:close_connection_after_writing, nil)
+    @stream.expect(:write, nil, [result])
     # end
     @stream.expect(:nil?, false)
     @stream.expect(:close_connection, nil)
