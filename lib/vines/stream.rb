@@ -122,7 +122,7 @@ module Vines
 
     def ssl_verify_peer(pem)
       # Skip verifying if user accept self-signed certificates
-      return if self.vhost.accept_self_signed?
+      return true if self.vhost.accept_self_signed?
       # EM is supposed to close the connection when this returns false,
       # but it only does that for inbound connections, not when we
       # make a connection to another server.
