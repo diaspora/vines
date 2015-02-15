@@ -93,7 +93,7 @@ module Vines
       end
 
       def outbound_tls_required(required)
-        if required.is_a? Boolean
+        if !!required == required
           @outbound_tls_required = required
         end
       end
