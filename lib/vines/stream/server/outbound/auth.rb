@@ -17,7 +17,11 @@ module Vines
             # closing or restarting the stream
             stream.outbound_tls_required(tls_required?(node))
 
-            if tls?(node)
+            if stream.dialback_verify_key?
+              @success = Authoritative
+              stream.callback!
+              advance
+            elsif tls?(node)
               @success = TLSResult
               stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
               advance

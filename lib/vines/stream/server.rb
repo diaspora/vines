@@ -146,7 +146,6 @@ module Vines
         @domain, @remote_domain = to, from unless @domain
         send_stream_header
         raise StreamErrors::NotAuthorized if domain_change?(to, from)
-        raise StreamErrors::UnsupportedVersion unless node['version'] == '1.0'
         raise StreamErrors::ImproperAddressing unless valid_address?(@domain) && valid_address?(@remote_domain)
         raise StreamErrors::HostUnknown unless config.vhost?(@domain) || config.pubsub?(@domain) || config.component?(@domain)
         raise StreamErrors::NotAuthorized unless config.s2s?(@remote_domain) && config.allowed?(@domain, @remote_domain)
@@ -179,10 +178,10 @@ module Vines
           'xmlns:db'     => NAMESPACES[:legacy_dialback],
           'xml:lang'     => 'en',
           'id'           => stream_id,
+          'version'      => '1.0',
           'from'         => @domain,
           'to'           => @remote_domain,
         }
-        attrs['version'] = '1.0' unless dialback_verify_key?
         write "<stream:stream %s>" % attrs.to_a.map{|k,v| "#{k}='#{v}'"}.join(' ')
       end
     end
