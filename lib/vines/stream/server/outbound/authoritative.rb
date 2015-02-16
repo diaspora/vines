@@ -17,18 +17,18 @@ module Vines
 
             case node[TYPE]
             when VALID
-              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " +
+              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " \
                 "from='#{node[TO]}' to='#{node[FROM]}' type='#{node[TYPE]}'/>")
               @inbound.advance(Server::Ready.new(@inbound))
               @inbound.notify_connected
             when INVALID
-              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " +
+              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " \
                 "from='#{node[TO]}' to='#{node[FROM]}' type='#{node[TYPE]}'/>")
               @inbound.close_connection_after_writing
             else
-              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " +
-                "from='#{node[TO]}' to='#{node[FROM]}' type='#{ERROR}'>" +
-                "<error type='cancel'><item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" +
+              @inbound.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " \
+                "from='#{node[TO]}' to='#{node[FROM]}' type='#{ERROR}'>" \
+                "<error type='cancel'><item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>" \
                 "</error></db:result>")
               @inbound.close_connection_after_writing
             end

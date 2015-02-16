@@ -6,6 +6,7 @@ module Vines
       class Outbound
         class Auth < State
           REQUIRED = 'required'.freeze
+          FEATURES = 'features'.freeze
 
           def initialize(stream, success=AuthDialbackResult)
             super
@@ -23,8 +24,8 @@ module Vines
             elsif dialback?(node)
               secret = Kit.auth_token
               dialback_key = Kit.dialback_key(secret, stream.remote_domain, stream.domain, stream.id)
-              stream.write(%Q(<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}'
-                from="#{stream.domain}" to="#{stream.remote_domain}">#{dialback_key}</db:result>))
+              stream.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}'" \
+                "from='#{stream.domain}' to='#{stream.remote_domain}'>#{dialback_key}</db:result>")
               advance
               stream.router << stream # We need to be discoverable for the dialback connection
               stream.state.dialback_secret = secret
@@ -37,7 +38,7 @@ module Vines
 
           def tls_required?(node)
             child = node.xpath('ns:starttls', 'ns' => NAMESPACES[:tls]).children.first
-            !child.nil? && child.name == REQUIRED
+            child && child.name == REQUIRED
           end
 
           def dialback?(node)
@@ -51,7 +52,7 @@ module Vines
           end
 
           def features?(node)
-            node.name == 'features' && namespace(node) == NAMESPACES[:stream]
+            node.name == FEATURES && namespace(node) == NAMESPACES[:stream]
           end
         end
       end

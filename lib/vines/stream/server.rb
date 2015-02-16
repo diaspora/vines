@@ -15,7 +15,7 @@ module Vines
       # yielded stream will be nil if the remote connection failed. We need to
       # use a background thread to avoid blocking the server on DNS SRV
       # lookups.
-      def self.start(config, to, from, dbv = false, &callback)
+      def self.start(config, to, from, dialback_verify_key = false, &callback)
         op = proc do
           Resolv::DNS.open do |dns|
             dns.getresources("_xmpp-server._tcp.#{to}", Resolv::DNS::Resource::IN::SRV)
@@ -28,22 +28,22 @@ module Vines
               def method_missing(name); self[name]; end
             end
           end
-          Server.connect(config, to, from, srv, dbv, callback)
+          Server.connect(config, to, from, srv, dialback_verify_key, callback)
         end
         EM.defer(proc { op.call rescue [] }, cb)
       end
 
-      def self.connect(config, to, from, srv, dbv = false, callback)
+      def self.connect(config, to, from, srv, dialback_verify_key = false, callback)
         if srv.empty?
           # fiber so storage calls work properly
           Fiber.new { callback.call(nil) }.resume
         else
           begin
             rr = srv.shift
-            opts = {to: to, from: from, srv: srv, dialback_verify: dbv, callback: callback}
+            opts = {to: to, from: from, srv: srv, dialback_verify_key: dialback_verify_key, callback: callback}
             EM.connect(rr.target.to_s, rr.port, Server, config, opts)
           rescue => e
-            connect(config, to, from, srv, dbv, callback)
+            connect(config, to, from, srv, dialback_verify_key, callback)
           end
         end
       end
@@ -59,7 +59,7 @@ module Vines
         @remote_domain = options[:to]
         @domain = options[:from]
         @srv = options[:srv]
-        @dialback_verify = options[:dialback_verify]
+        @dialback_verify_key = options[:dialback_verify_key]
         @callback = options[:callback]
         @outbound = @remote_domain && @domain
         start = @outbound ? Outbound::Start.new(self) : Start.new(self)
@@ -76,16 +76,21 @@ module Vines
       end
 
       def ssl_verify_peer(pem)
-        @store.trusted?(pem).tap {|trusted| @peer_trusted = trusted}
+        @peer_trusted = @store.trusted?(pem)
+        true
+      end
+
+      def peer_trusted?
+        !@peer_trusted.nil? && @peer_trusted
+      end
+
+      def dialback_retry?
+        return false if @peer_trusted.nil? || @peer_trusted
         true
       end
 
       def ssl_handshake_completed
-        @peer_trusted = cert_domain_matches?(@remote_domain) && @peer_trusted
-      end
-
-      def dialback_retry?
-        !@peer_trusted.nil? && !@peer_trusted
+        @peer_trusted = cert_domain_matches?(@remote_domain) && peer_trusted?
       end
 
       def outbound_tls_required?
@@ -93,9 +98,7 @@ module Vines
       end
 
       def outbound_tls_required(required)
-        if !!required == required
-          @outbound_tls_required = required
-        end
+        @outbound_tls_required = required
       end
 
       # Return an array of allowed authentication mechanisms advertised as
@@ -129,8 +132,8 @@ module Vines
         @callback.call(self) if @callback
       end
 
-      def dialback_verify?
-        @dialback_verify
+      def dialback_verify_key?
+        @dialback_verify_key
       end
 
       def ready?
@@ -179,7 +182,7 @@ module Vines
           'from'         => @domain,
           'to'           => @remote_domain,
         }
-        attrs['version'] = '1.0' unless dialback_verify?
+        attrs['version'] = '1.0' unless dialback_verify_key?
         write "<stream:stream %s>" % attrs.to_a.map{|k,v| "#{k}='#{v}'"}.join(' ')
       end
     end

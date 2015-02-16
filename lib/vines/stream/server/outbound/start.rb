@@ -11,7 +11,7 @@ module Vines
 
           def node(node)
             raise StreamErrors::NotAuthorized unless stream?(node)
-            if stream.dialback_verify?
+            if stream.dialback_verify_key?
               @success = Authoritative
               stream.callback!
             end

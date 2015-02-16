@@ -18,6 +18,11 @@ module Vines
   end
 end
 
+module Boolean; end
+class TrueClass; include Boolean; end
+class FalseClass; include Boolean; end
+class NilClass; include Boolean; end
+
 describe Vines::Stream::Server::Outbound::Auth do
   before do
     @stream = MiniTest::Mock.new
@@ -25,26 +30,23 @@ describe Vines::Stream::Server::Outbound::Auth do
   end
 
   def test_missing_children
-    skip()
     node = node('<stream:features/>')
-    @stream.expect(:outbound_tls_required, nil, [false])
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
     assert @stream.verify
   end
 
   def test_invalid_children
-    skip()
     node = node(%Q{<stream:features><message/></stream:features>})
-    @stream.expect(:outbound_tls_required, nil, [false])
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
     assert @stream.verify
   end
 
   def test_valid_stream_features
-    skip()
-    node = node(%Q{<stream:features><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
     starttls = "<starttls xmlns='#{Vines::NAMESPACES[:tls]}'/>"
-    @stream.expect(:outbound_tls_required, nil, [true])
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::TLSResult])
     @stream.expect(:write, nil, [starttls])
     @state.node(node)
@@ -60,7 +62,7 @@ describe Vines::Stream::Server::Outbound::Auth do
     @stream.expect(:remote_domain, "remote.host")
     @stream.expect(:id, "1234")
     @stream.expect(:write, nil, [String])
-    @stream.expect(:outbound_tls_required, nil, [false])
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::AuthDialbackResult])
     @stream.expect(:state, StateWrapper.new)
     @state.node(node)

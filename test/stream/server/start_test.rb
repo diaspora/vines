@@ -29,7 +29,7 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream_tls_required
     node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-    features = node(%Q{<stream:features><starttls xmlns="#{Vines::NAMESPACES[:tls]}"/><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"/><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
     @stream.expect(:start, nil, [node])
     @stream.expect(:vhost, VhostWrapper.new(false))
     @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])
@@ -41,7 +41,7 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream_with_dialback_flag
     node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-    features = node(%Q{<stream:features><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
     @stream.expect(:start, nil, [node])
     @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])
     @stream.expect(:dialback_retry?, true)
@@ -52,7 +52,7 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream
     node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-    features = node(%Q{<stream:features><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
     @stream.expect(:start, nil, [node])
     @stream.expect(:vhost, VhostWrapper.new(true))
     @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])

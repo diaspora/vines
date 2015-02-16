@@ -26,8 +26,10 @@ module Vines
             end
           elsif dialback?(node)
             begin
-              Vines::Stream::Server.start(stream.config, node[FROM], node[TO], dbv = true) do |a|
-                a.write("<db:verify from='#{node[TO]}' id='#{stream.id}' to='#{node[FROM]}'>#{node.text}</db:verify>") if a
+              Vines::Stream::Server.start(stream.config, node[FROM], node[TO], true) do |authoritative|
+                if authoritative
+                  authoritative.write("<db:verify from='#{node[TO]}' id='#{stream.id}' to='#{node[FROM]}'>#{node.text}</db:verify>")
+                end
               end
               # We need to be discoverable for the dialback connection
               stream.router << stream

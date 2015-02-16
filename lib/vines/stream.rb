@@ -11,7 +11,7 @@ module Vines
     STREAM = 'stream'.freeze
     PAD   = 20
 
-    attr_reader   :config, :domain, :id
+    attr_reader   :config, :domain, :id, :state
     attr_accessor :user
 
     def initialize(config)
@@ -200,12 +200,6 @@ module Vines
 
     def router
       @config.router
-    end
-
-    # Returns the current +State+ of the stream's state machine. Provided as a
-    # method so subclasses can override the behavior.
-    def state
-      @state
     end
 
     private
