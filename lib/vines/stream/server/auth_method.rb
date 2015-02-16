@@ -49,8 +49,8 @@ module Vines
               # We need to be discoverable for the dialback connection
               stream.router << stream
             rescue StanzaErrors::RemoteServerNotFound => e
-              stream.write("<db:result from='#{node[TO]}' to='#{node[FROM]}'" +
-                           " type='error'><error type='cancel'><item-not-found " +
+              stream.write("<db:result from='#{node[TO]}' to='#{node[FROM]}' " \
+                           "type='error'><error type='cancel'><item-not-found " \
                            "xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></db:result>")
               stream.close_connection_after_writing
             end
