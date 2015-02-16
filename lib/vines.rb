@@ -87,7 +87,6 @@ end
   vines/jid
 
   vines/stanza
-  vines/stanza/dialback
   vines/stanza/iq
   vines/stanza/iq/query
   vines/stanza/iq/auth
