@@ -28,7 +28,7 @@ module Vines
             elsif dialback?(node)
               secret = Kit.auth_token
               dialback_key = Kit.dialback_key(secret, stream.remote_domain, stream.domain, stream.id)
-              stream.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}'" \
+              stream.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " \
                 "from='#{stream.domain}' to='#{stream.remote_domain}'>#{dialback_key}</db:result>")
               advance
               stream.router << stream # We need to be discoverable for the dialback connection
