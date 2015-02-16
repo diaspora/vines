@@ -21,16 +21,6 @@ describe Vines::Stream::Server::Outbound::Start do
   def test_valid_stream
     node = node(%Q{<stream:stream xmlns='jabber:client' xmlns:stream='#{Vines::NAMESPACES[:stream]}' xml:lang='en' id='1234' from='host.com' version='1.0'>})
     @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::Auth])
-    @stream.expect(:dialback_verify_key?, false)
-    @state.node(node)
-    assert @stream.verify
-  end
-
-  def test_valid_stream_restart
-    node = node(%Q{<stream:stream xmlns='jabber:client' xmlns:stream='#{Vines::NAMESPACES[:stream]}' xml:lang='en' id='1234' from='host.com' version='1.0'>})
-    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::Authoritative])
-    @stream.expect(:callback!, nil)
-    @stream.expect(:dialback_verify_key?, true)
     @state.node(node)
     assert @stream.verify
   end
