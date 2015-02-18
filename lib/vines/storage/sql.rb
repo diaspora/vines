@@ -165,8 +165,7 @@ module Vines
           contact.update_attributes(
             name: fresh.name,
             ask: fresh.ask,
-            subscription: fresh.subscription,
-            groups: get_external_groups)
+            subscription: fresh.subscription)
         end
 
         # add new contacts to roster
@@ -180,8 +179,7 @@ module Vines
               jid: contact.jid.bare.to_s,
               name: contact.name,
               ask: contact.ask,
-              subscription: contact.subscription,
-              groups: get_external_groups) unless jids.include?(contact.jid.bare.to_s)
+              subscription: contact.subscription) unless jids.include?(contact.jid.bare.to_s)
           end
         }
         xuser.save
