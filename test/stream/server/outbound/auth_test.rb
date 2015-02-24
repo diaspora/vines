@@ -2,67 +2,83 @@
 
 require 'test_helper'
 
+class OperatorWrapper
+  def <<(stream)
+    [stream]
+  end
+end
+
+class StateWrapper
+  def dialback_secret=(secret); end
+end
+
+module Vines
+  module Kit
+    def auth_token; "1234"; end
+  end
+end
+
+module Boolean; end
+class TrueClass; include Boolean; end
+class FalseClass; include Boolean; end
+class NilClass; include Boolean; end
+
 describe Vines::Stream::Server::Outbound::Auth do
   before do
     @stream = MiniTest::Mock.new
     @state = Vines::Stream::Server::Outbound::Auth.new(@stream)
   end
 
-  def test_invalid_element
-    node = node('<message/>')
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-  end
-
-  def test_invalid_sasl_element
-    node = node(%Q{<message xmlns="#{Vines::NAMESPACES[:sasl]}"/>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-  end
-
-  def test_missing_namespace
+  def test_missing_children
     node = node('<stream:features/>')
+    @stream.expect(:dialback_verify_key?, false)
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    assert @stream.verify
   end
 
-  def test_invalid_namespace
-    node = node('<stream:features xmlns="bogus"/>')
+  def test_invalid_children
+    node = node(%Q{<stream:features><message/></stream:features>})
+    @stream.expect(:dialback_verify_key?, false)
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    assert @stream.verify
   end
 
-  def test_missing_mechanisms
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams"/>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+  def test_valid_stream_features
+    node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    starttls = "<starttls xmlns='#{Vines::NAMESPACES[:tls]}'/>"
+    @stream.expect(:dialback_verify_key?, false)
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
+    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::TLSResult])
+    @stream.expect(:write, nil, [starttls])
+    @state.node(node)
+    assert @stream.verify
   end
 
-  def test_missing_mechanisms_namespace
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams"><mechanisms/></stream:features>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+  def test_dialback_feature_only
+    node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+    @stream.expect(:dialback_verify_key?, false)
+    @stream.expect(:router, OperatorWrapper.new)
+    @stream.expect(:domain, "local.host")
+    @stream.expect(:remote_domain, "remote.host")
+    @stream.expect(:domain, "local.host")
+    @stream.expect(:remote_domain, "remote.host")
+    @stream.expect(:id, "1234")
+    @stream.expect(:write, nil, [String])
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
+    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::AuthDialbackResult])
+    @stream.expect(:state, StateWrapper.new)
+    @state.node(node)
+    assert @stream.verify
   end
 
-  def test_missing_mechanism
-    mechanisms = %q{<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl"/>}
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams">#{mechanisms}</stream:features>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-  end
-
-  def test_missing_mechanism_text
-    mechanisms = %q{<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><mechanism></mechanism></mechanisms>}
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams">#{mechanisms}</stream:features>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-  end
-
-  def test_invalid_mechanism_text
-    mechanisms = %q{<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><mechanism>BOGUS</mechanism></mechanisms>}
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams">#{mechanisms}</stream:features>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-  end
-
-  def test_valid_mechanism
-    @stream.expect(:domain, 'wonderland.lit')
-    expected = %Q{<auth xmlns="urn:ietf:params:xml:ns:xmpp-sasl" mechanism="EXTERNAL">d29uZGVybGFuZC5saXQ=</auth>}
-    @stream.expect(:write, nil, [expected])
-    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::AuthResult.new(@stream)])
-    mechanisms = %q{<mechanisms xmlns="urn:ietf:params:xml:ns:xmpp-sasl"><mechanism>EXTERNAL</mechanism></mechanisms>}
-    node = node(%Q{<stream:features xmlns:stream="http://etherx.jabber.org/streams">#{mechanisms}</stream:features>})
+  def test_dialback_verify_key
+    node = node('<stream:stream/>')
+    @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::Authoritative])
+    @stream.expect(:dialback_verify_key?, true)
+    @stream.expect(:callback!, nil)
+    @stream.expect(:outbound_tls_required, nil, [Boolean])
     @state.node(node)
     assert @stream.verify
   end

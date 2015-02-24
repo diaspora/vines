@@ -5,24 +5,58 @@ module Vines
     class Server
       class Outbound
         class Auth < State
-          NS = NAMESPACES[:sasl]
+          REQUIRED = 'required'.freeze
+          FEATURES = 'features'.freeze
 
-          def initialize(stream, success=AuthResult)
+          def initialize(stream, success=AuthDialbackResult)
             super
           end
 
           def node(node)
-            raise StreamErrors::NotAuthorized unless external?(node)
-            authzid = Base64.strict_encode64(stream.domain)
-            stream.write(%Q{<auth xmlns="#{NS}" mechanism="EXTERNAL">#{authzid}</auth>})
-            advance
+            # We have to remember tls_require for
+            # closing or restarting the stream
+            stream.outbound_tls_required(tls_required?(node))
+
+            if stream.dialback_verify_key?
+              @success = Authoritative
+              stream.callback!
+              advance
+            elsif tls?(node)
+              @success = TLSResult
+              stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
+              advance
+            elsif dialback?(node)
+              secret = Kit.auth_token
+              dialback_key = Kit.dialback_key(secret, stream.remote_domain, stream.domain, stream.id)
+              stream.write("<db:result xmlns:db='#{NAMESPACES[:legacy_dialback]}' " \
+                "from='#{stream.domain}' to='#{stream.remote_domain}'>#{dialback_key}</db:result>")
+              advance
+              stream.router << stream # We need to be discoverable for the dialback connection
+              stream.state.dialback_secret = secret
+            else
+              raise StreamErrors::NotAuthorized
+            end
           end
 
           private
 
-          def external?(node)
-            external = node.xpath("ns:mechanisms/ns:mechanism[text()='EXTERNAL']", 'ns' => NS).any?
-            node.name == 'features' && namespace(node) == NAMESPACES[:stream] && external
+          def tls_required?(node)
+            child = node.xpath('ns:starttls', 'ns' => NAMESPACES[:tls]).children.first
+            child && child.name == REQUIRED
+          end
+
+          def dialback?(node)
+            dialback = node.xpath('ns:dialback', 'ns' => NAMESPACES[:dialback]).any?
+            features?(node) && dialback
+          end
+
+          def tls?(node)
+            tls = node.xpath('ns:starttls', 'ns' => NAMESPACES[:tls]).any?
+            features?(node) && tls
+          end
+
+          def features?(node)
+            node.name == FEATURES && namespace(node) == NAMESPACES[:stream]
           end
         end
       end

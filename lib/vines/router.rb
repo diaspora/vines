@@ -96,6 +96,11 @@ module Vines
       end
     end
 
+    # Return stream by id
+    def stream_by_id(id)
+      (@servers+@clients.values.flatten+@components).find {|stream| stream.id == id }
+    end
+
     # Returns the total number of streams connected to the server.
     def size
       clients = @clients.values.inject(0) {|sum, arr| sum + arr.size }

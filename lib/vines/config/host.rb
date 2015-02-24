@@ -15,6 +15,7 @@ module Vines
         @cross_domain_messages = false
         @private_storage = false
         @accept_self_signed = false
+        @force_s2s_encryption = false
         @components, @pubsubs = {}, {}
         validate_domain(@name)
         instance_eval(&block)
@@ -28,6 +29,14 @@ module Vines
         else
           @storage
         end
+      end
+
+      def force_s2s_encryption(enabled)
+        @force_s2s_encryption = !!enabled
+      end
+
+      def force_s2s_encryption?
+        @force_s2s_encryption
       end
 
       def accept_self_signed(enabled)

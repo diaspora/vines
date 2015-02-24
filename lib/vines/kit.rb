@@ -19,5 +19,12 @@ module Vines
     def self.auth_token
       SecureRandom.hex(64)
     end
+
+    # Generate a HMAC for dialback as recommended in XEP-0185
+    def self.dialback_key(key, receiving, originating, id)
+      digest = OpenSSL::Digest.new('sha256')
+      data = "#{receiving} #{originating} #{id}"
+      OpenSSL::HMAC.hexdigest(digest, digest.hexdigest(key), data)
+    end
   end
 end

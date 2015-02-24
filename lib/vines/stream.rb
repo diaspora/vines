@@ -8,9 +8,10 @@ module Vines
     include Vines::Log
 
     ERROR = 'error'.freeze
+    STREAM = 'stream'.freeze
     PAD   = 20
 
-    attr_reader   :config, :domain
+    attr_reader   :config, :domain, :id, :state
     attr_accessor :user
 
     def initialize(config)
@@ -265,6 +266,7 @@ module Vines
       if error?(node)
         close_stream
       else
+        update_stream_id(node)
         state.node(node)
       end
     rescue => e
@@ -286,14 +288,6 @@ module Vines
         ["#{label} stanza:".ljust(PAD), from, to, node])
     end
 
-    # Inspects the current state of the stream's state machine. Provided as a
-    # method so subclasses can override the behavior.
-    #
-    # Returns the current Stream::State.
-    def state
-      @state
-    end
-
     # Determine if this is a valid domain-only JID that can be used in
     # stream initiation stanza headers.
     #
@@ -302,6 +296,14 @@ module Vines
     # Return true if the jid is domain-only.
     def valid_address?(jid)
       JID.new(jid).domain? rescue false
+    end
+
+    def update_stream_id(id_or_node)
+      if id_or_node.is_a? String
+        @id = id_or_node.freeze
+      elsif Node.stream?(id_or_node) # move stream? method somewhere else?
+        @id = id_or_node['id'].freeze
+      end
     end
   end
 end

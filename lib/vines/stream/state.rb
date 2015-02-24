@@ -8,11 +8,9 @@ module Vines
     class State
       include Nokogiri::XML
       include Vines::Log
+      include Vines::Node
 
       attr_accessor :stream
-
-      BODY   = 'body'.freeze
-      STREAM = 'stream'.freeze
 
       def initialize(stream, success=nil)
         @stream, @success = stream, success
@@ -40,20 +38,8 @@ module Vines
         stream.advance(@success.new(stream))
       end
 
-      def stream?(node)
-        node.name == STREAM && namespace(node) == NAMESPACES[:stream]
-      end
-
-      def body?(node)
-        node.name == BODY && namespace(node) == NAMESPACES[:http_bind]
-      end
-
-      def namespace(node)
-        node.namespace ? node.namespace.href : nil
-      end
-
       def to_stanza(node)
-        Stanza.from_node(node, stream)
+        super(node, stream)
       end
     end
   end

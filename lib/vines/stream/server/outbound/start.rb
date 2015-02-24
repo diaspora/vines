@@ -5,7 +5,7 @@ module Vines
     class Server
       class Outbound
         class Start < State
-          def initialize(stream, success=TLS)
+          def initialize(stream, success=Auth)
             super
           end
 

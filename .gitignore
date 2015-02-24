@@ -4,3 +4,4 @@ pkg
 *.gem
 _site
 vendor/
+vines.log

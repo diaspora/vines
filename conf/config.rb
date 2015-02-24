@@ -19,6 +19,7 @@ Vines::Config.configure do
   host 'diaspora' do
     cross_domain_messages true
     accept_self_signed false
+    force_s2s_encryption false
     storage 'sql'
   end
 

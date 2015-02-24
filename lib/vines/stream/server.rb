@@ -15,7 +15,7 @@ module Vines
       # yielded stream will be nil if the remote connection failed. We need to
       # use a background thread to avoid blocking the server on DNS SRV
       # lookups.
-      def self.start(config, to, from, &callback)
+      def self.start(config, to, from, dialback_verify_key = false, &callback)
         op = proc do
           Resolv::DNS.open do |dns|
             dns.getresources("_xmpp-server._tcp.#{to}", Resolv::DNS::Resource::IN::SRV)
@@ -28,22 +28,22 @@ module Vines
               def method_missing(name); self[name]; end
             end
           end
-          Server.connect(config, to, from, srv, callback)
+          Server.connect(config, to, from, srv, dialback_verify_key, callback)
         end
         EM.defer(proc { op.call rescue [] }, cb)
       end
 
-      def self.connect(config, to, from, srv, callback)
+      def self.connect(config, to, from, srv, dialback_verify_key = false, callback)
         if srv.empty?
           # fiber so storage calls work properly
           Fiber.new { callback.call(nil) }.resume
         else
           begin
             rr = srv.shift
-            opts = {to: to, from: from, srv: srv, callback: callback}
+            opts = {to: to, from: from, srv: srv, dialback_verify_key: dialback_verify_key, callback: callback}
             EM.connect(rr.target.to_s, rr.port, Server, config, opts)
           rescue => e
-            connect(config, to, from, srv, callback)
+            connect(config, to, from, srv, dialback_verify_key, callback)
           end
         end
       end
@@ -53,10 +53,13 @@ module Vines
 
       def initialize(config, options={})
         super(config)
+        @outbound_tls_required = false
+        @peer_trusted = nil
         @connected = false
         @remote_domain = options[:to]
         @domain = options[:from]
         @srv = options[:srv]
+        @dialback_verify_key = options[:dialback_verify_key]
         @callback = options[:callback]
         @outbound = @remote_domain && @domain
         start = @outbound ? Outbound::Start.new(self) : Start.new(self)
@@ -72,8 +75,30 @@ module Vines
         config[:server].max_stanza_size
       end
 
+      def ssl_verify_peer(pem)
+        @peer_trusted = @store.trusted?(pem)
+        true
+      end
+
+      def peer_trusted?
+        !@peer_trusted.nil? && @peer_trusted
+      end
+
+      def dialback_retry?
+        return false if @peer_trusted.nil? || @peer_trusted
+        true
+      end
+
       def ssl_handshake_completed
-        close_connection unless cert_domain_matches?(@remote_domain)
+        @peer_trusted = cert_domain_matches?(@remote_domain) && peer_trusted?
+      end
+
+      def outbound_tls_required?
+        @outbound_tls_required
+      end
+
+      def outbound_tls_required(required)
+        @outbound_tls_required = required
       end
 
       # Return an array of allowed authentication mechanisms advertised as
@@ -99,10 +124,16 @@ module Vines
 
       def notify_connected
         @connected = true
-        if @callback
-          @callback.call(self)
-          @callback = nil
-        end
+        self.callback!
+        @callback = nil
+      end
+
+      def callback!
+        @callback.call(self) if @callback
+      end
+
+      def dialback_verify_key?
+        @dialback_verify_key
       end
 
       def ready?
@@ -115,7 +146,6 @@ module Vines
         @domain, @remote_domain = to, from unless @domain
         send_stream_header
         raise StreamErrors::NotAuthorized if domain_change?(to, from)
-        raise StreamErrors::UnsupportedVersion unless node['version'] == '1.0'
         raise StreamErrors::ImproperAddressing unless valid_address?(@domain) && valid_address?(@remote_domain)
         raise StreamErrors::HostUnknown unless config.vhost?(@domain) || config.pubsub?(@domain) || config.component?(@domain)
         raise StreamErrors::NotAuthorized unless config.s2s?(@remote_domain) && config.allowed?(@domain, @remote_domain)
@@ -140,14 +170,17 @@ module Vines
       end
 
       def send_stream_header
+        stream_id = Kit.uuid
+        update_stream_id(stream_id)
         attrs = {
           'xmlns'        => NAMESPACES[:server],
           'xmlns:stream' => NAMESPACES[:stream],
+          'xmlns:db'     => NAMESPACES[:legacy_dialback],
           'xml:lang'     => 'en',
-          'id'           => Kit.uuid,
+          'id'           => stream_id,
+          'version'      => '1.0',
           'from'         => @domain,
           'to'           => @remote_domain,
-          'version'      => '1.0'
         }
         write "<stream:stream %s>" % attrs.to_a.map{|k,v| "#{k}='#{v}'"}.join(' ')
       end
