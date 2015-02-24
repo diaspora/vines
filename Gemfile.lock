@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    diaspora-vines (0.1.26)
+    diaspora-vines (0.1.27)
       activerecord (~> 4.1)
       bcrypt (~> 3.1)
       em-hiredis (~> 0.3.0)
