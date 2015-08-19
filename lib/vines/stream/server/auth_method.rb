@@ -43,6 +43,7 @@ module Vines
             begin
               Vines::Stream::Server.start(stream.config, node[FROM], node[TO], true) do |authoritative|
                 if authoritative
+                  # will be closed in outbound/authoritative.rb
                   authoritative.write("<db:verify from='#{node[TO]}' id='#{stream.id}' to='#{node[FROM]}'>#{node.text}</db:verify>")
                 end
               end
