@@ -21,10 +21,6 @@ module Vines
               @success = Authoritative
               stream.callback!
               advance
-            elsif tls?(node)
-              @success = TLSResult
-              stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
-              advance
             elsif dialback?(node)
               secret = Kit.auth_token
               dialback_key = Kit.dialback_key(secret, stream.remote_domain, stream.domain, stream.id)
@@ -33,6 +29,10 @@ module Vines
               advance
               stream.router << stream # We need to be discoverable for the dialback connection
               stream.state.dialback_secret = secret
+            elsif tls?(node)
+              @success = TLSResult
+              stream.write("<starttls xmlns='#{NAMESPACES[:tls]}'/>")
+              advance
             else
               raise StreamErrors::NotAuthorized
             end

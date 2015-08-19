@@ -100,6 +100,7 @@ end
   vines/stanza/iq/session
   vines/stanza/iq/vcard
   vines/stanza/iq/version
+  vines/stanza/dialback
   vines/stanza/message
   vines/stanza/presence
   vines/stanza/presence/error
