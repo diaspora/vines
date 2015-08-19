@@ -11,19 +11,16 @@ module Vines
       def process
         id, from, to = %w[id from to].map {|a| @node[a] }
         key = @node.text
-        # Maybe select by id?
-        outbound_stream = router.stream_by_id(id)
 
-        # Turn into error ?
+        outbound_stream = router.stream_by_id(id)
         unless outbound_stream && outbound_stream.state.is_a?(Stream::Server::Outbound::AuthDialbackResult)
-          @stream.write(%Q{<db:verify from="#{to}" to=#{from} id=#{id} type="error"><error type="cancel"><item-not-found xmlns="#{NAMESPACES[:stanzas]}" /></error></db:verify>})
+          @stream.write(%Q{<db:verify from="#{to}" to="#{from}" id="#{id}" type="error"><error type="cancel"><item-not-found xmlns="#{NAMESPACES[:stanzas]}"/></error></db:verify>})
           return
         end
 
         secret = outbound_stream.state.dialback_secret
-
         type = Kit.dialback_key(secret, from, to, id) == key ? VALID_TYPE : INVALID_TYPE
-        @stream.write(%Q{<db:verify from="#{to}" to="#{from}" id="#{id}" type="#{type}" />})
+        @stream.write(%Q{<db:verify from="#{to}" to="#{from}" id="#{id}" type="#{type}"/>})
       end
     end
   end
