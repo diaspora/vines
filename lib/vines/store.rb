@@ -5,6 +5,7 @@ module Vines
   # This uses the conf/certs/*.crt files as the list of trusted root
   # CA certificates.
   class Store
+    include Vines::Log
     @@sources = nil
 
     # Create a certificate store to read certificate files from the given
@@ -68,9 +69,9 @@ module Vines
               [name, certs]
             end
           rescue ArgumentError => e
-            puts "Skipping '#{name}' cause of '#{e.message.to_s}'! "+
-                 "Checkout https://wiki.diasporafoundation.org/Vines#FAQ "+
-                 "for further instructions."
+            log.error("Skipping '#{name}' cause of '#{e.message.to_s}'! "+
+                      "Checkout https://wiki.diasporafoundation.org/Vines#FAQ "+
+                      "for further instructions.")
           end
         end
         Hash[pairs.compact]
@@ -128,9 +129,9 @@ module Vines
           end
         end
       end
-      puts "Your're using vines without a certificate! "+
-           "Checkout https://wiki.diasporafoundation.org/Vines#Certificates "+
-           "for further instructions."
+      log.error("Your're using vines without a certificate! "+
+                "Checkout https://wiki.diasporafoundation.org/Vines#Certificates "+
+                "for further instructions.")
       nil
     end
 
