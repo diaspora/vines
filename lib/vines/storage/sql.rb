@@ -110,7 +110,7 @@ module Vines
             xuser.authentication_token
 
           # add diaspora contacts
-          xuser.contacts.chat_enabled.each do |contact|
+          xuser.contacts.chat_enabled.group(:person_id).each do |contact|
             handle = contact.person.diaspora_handle
             profile = contact.person.profile
             name = "#{profile.first_name} #{profile.last_name}"
