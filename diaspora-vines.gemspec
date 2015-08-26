@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'activerecord', '~> 4.1'
 
 
-  s.add_development_dependency 'pronto', '~> 0.4.2'
+  s.add_development_dependency 'pronto_zauberstuhl', '~> 0.4.2'
   s.add_development_dependency 'pronto-rubocop', '~> 0.4.4'
   s.add_development_dependency 'rails', '~> 4.1'
   s.add_development_dependency 'sqlite3', '~> 1.3.9'
