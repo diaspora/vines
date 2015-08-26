@@ -1,10 +1,12 @@
 language: ruby
 before_script:
-  - "export RAILS_ENV=development"
-  - "export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}"
+- export RAILS_ENV=development
+- export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
 script:
-  - "bundle exec pronto run -f github_pr -c origin/develop"
-  - "bundle exec rake test"
+- bundle exec pronto run -f github_pr -c origin/develop
+- bundle exec rake test
 rvm:
 - 2.0.0
 - 1.9.3
+env:
+  secure: EGZMq7mUTRi3YrWoczfYos8oJtC7g6Nvm/ludTOZzpFAKNU1UiubCy37L7qV4OfO8ACewQrvFMIOB1Jtj8q/UAQgJH+xHY9U5ghDAvnBDmFdJ0JUksy2H3tHBzU2eAIRrdHuBk507/rgRgwCOxAqtFOUrlu4GVozeaBnjYcJscQ=
