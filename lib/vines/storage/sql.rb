@@ -39,7 +39,11 @@ module Vines
       end
 
       class Contact < ActiveRecord::Base
-        scope :chat_enabled, -> { joins(:aspects).where("aspects.chat_enabled = ?", true) }
+        scope :chat_enabled, -> {
+          joins(:aspects)
+          .where("aspects.chat_enabled = ?", true)
+          .group("person_id, contacts.id")
+        }
 
         belongs_to :users
         belongs_to :person
@@ -110,7 +114,7 @@ module Vines
             xuser.authentication_token
 
           # add diaspora contacts
-          xuser.contacts.chat_enabled.group(:person_id).each do |contact|
+          xuser.contacts.chat_enabled.each do |contact|
             handle = contact.person.diaspora_handle
             profile = contact.person.profile
             name = "#{profile.first_name} #{profile.last_name}"
