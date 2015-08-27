@@ -26,15 +26,21 @@ describe Vines::Stream::Server::Auth do
     end
 
     it 'passes external auth with empty authzid' do
-      node = external('=')
-      subject.node(node)
-      stream.verify
+      EM.run {
+        node = external('=')
+        subject.node(node)
+        stream.verify
+        EM.stop
+      }
     end
 
     it 'passes external auth with authzid matching from domain' do
-      node = external(Base64.strict_encode64('wonderland.lit'))
-      subject.node(node)
-      stream.verify
+      EM.run {
+        node = external(Base64.strict_encode64('wonderland.lit'))
+        subject.node(node)
+        stream.verify
+        EM.stop
+      }
     end
   end
 
@@ -47,9 +53,12 @@ describe Vines::Stream::Server::Auth do
     end
 
     it 'fails external auth with mismatched from domain' do
-      node = external(Base64.strict_encode64('verona.lit'))
-      subject.node(node)
-      stream.verify
+      EM.run {
+        node = external(Base64.strict_encode64('verona.lit'))
+        subject.node(node)
+        stream.verify
+        EM.stop
+      }
     end
   end
 

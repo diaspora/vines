@@ -20,70 +20,97 @@ describe Vines::Stream::Server::AuthMethod do
   end
 
   def test_invalid_element
-    node = node('<message/>')
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node('<message/>')
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_invalid_tls_element
-    node = node(%Q{<message xmlns="#{Vines::NAMESPACES[:tls]}"/>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node(%Q{<message xmlns="#{Vines::NAMESPACES[:tls]}"/>})
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_invalid_dialback_element
-    node = node(%Q{<message xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}"/>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node(%Q{<message xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}"/>})
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_missing_tls_namespace
-    node = node('<starttls/>')
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node('<starttls/>')
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_no_dialback_payload
-    node = node('<db:result/>')
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node('<db:result/>')
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_invalid_tls_namespace
-    node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:legacy_dialback]}"/>})
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+    EM.run {
+      node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:legacy_dialback]}"/>})
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      EM.stop
+    }
   end
 
   def test_missing_tls_certificate
-    @stream.expect(:encrypt?, false)
-    @stream.expect(:close_connection_after_writing, nil)
-    failure = %Q{<failure xmlns="#{Vines::NAMESPACES[:tls]}"/>}
-    node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:tls]}"/>})
-    @stream.expect(:write, nil, [failure])
-    @stream.expect(:write, nil, ['</stream:stream>'])
-    @state.node(node)
-    assert @stream.verify
+    EM.run {
+      @stream.expect(:encrypt?, false)
+      @stream.expect(:close_connection_after_writing, nil)
+      failure = %Q{<failure xmlns="#{Vines::NAMESPACES[:tls]}"/>}
+      node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:tls]}"/>})
+      @stream.expect(:write, nil, [failure])
+      @stream.expect(:write, nil, ['</stream:stream>'])
+      @state.node(node)
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   def test_valid_tls
-    @stream.expect(:encrypt?, true)
-    @stream.expect(:encrypt, nil)
-    @stream.expect(:reset, nil)
-    @stream.expect(:advance, nil, [Vines::Stream::Server::AuthRestart.new(@stream)])
-    success = %Q{<proceed xmlns="#{Vines::NAMESPACES[:tls]}"/>}
-    node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:tls]}"/>})
-    @stream.expect(:write, nil, [success])
-    @state.node(node)
-    assert @stream.verify
+    EM.run {
+      @stream.expect(:encrypt?, true)
+      @stream.expect(:encrypt, nil)
+      @stream.expect(:reset, nil)
+      @stream.expect(:advance, nil, [Vines::Stream::Server::AuthRestart.new(@stream)])
+      success = %Q{<proceed xmlns="#{Vines::NAMESPACES[:tls]}"/>}
+      node = node(%Q{<starttls xmlns="#{Vines::NAMESPACES[:tls]}"/>})
+      @stream.expect(:write, nil, [success])
+      @state.node(node)
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   def test_valid_dialback
-    @stream.expect(:config, Vines::Config)
-    @stream.expect(:router, OperatorWrapper.new)
-    @stream.expect(:close_connection_after_writing, nil)
-    node = node(%Q{
-      <db:result xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="#{@result[:from]}" to="#{@result[:to]}">
-        #{@result[:token]}
-      </db:result>
-    })
-    assert_nothing_raised do
-      @state.node(node)
-    end.must_equal(true)
+    EM.run {
+      @stream.expect(:config, Vines::Config)
+      @stream.expect(:router, OperatorWrapper.new)
+      @stream.expect(:close_connection_after_writing, nil)
+      node = node(%Q{
+        <db:result xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="#{@result[:from]}" to="#{@result[:to]}">
+          #{@result[:token]}
+        </db:result>
+      })
+      assert_nothing_raised do
+        @state.node(node)
+      end.must_equal(true)
+      EM.stop
+    }
   end
 
   private
