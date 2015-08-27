@@ -3,14 +3,6 @@
 require 'test_helper'
 require 'storage/sql_schema'
 
-module Vines
-  class Config
-    def instance.max_offline_msgs
-      return 1
-    end
-  end
-end
-
 module Diaspora
   class Application < Rails::Application
     def config.database_configuration
@@ -28,6 +20,16 @@ describe Vines::Storage::Sql do
   include SqlSchema
 
   def setup
+    config = Vines::Config.configure do
+      max_offline_msgs 1
+
+      host 'wonderland.lit' do
+        storage :fs do
+          dir Dir.tmpdir
+        end
+      end
+    end
+
     @test_user = {
       :name => "test",
       :url => "http://remote.host/",
