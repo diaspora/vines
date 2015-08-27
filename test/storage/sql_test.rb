@@ -80,6 +80,12 @@ describe Vines::Storage::Sql do
     ).save
   end
 
+  after do
+    # since we create the database once we
+    # have to reset it after every test run
+    Vines::Storage::Sql::ChatOfflineMessage.all.each do |m|; m.destroy; end
+  end
+
   def test_save_message
     fibered do
       db = storage
@@ -145,14 +151,14 @@ describe Vines::Storage::Sql do
   def test_destroy_message
     fibered do
       db = storage
-      com = Vines::Storage::Sql::ChatOfflineMessage
-      com.new(:from => @test_user[:jid],
+      Vines::Storage::Sql::ChatOfflineMessage.new(
+        :from => @test_user[:jid],
         :to => "someone@inthe.void",
         :message => "test"
       ).save
-
-      db.destroy_message(1)
-
+      Vines::Storage::Sql::ChatOfflineMessage.all.each do |com|
+        db.destroy_message(com.id)
+      end
       count = Vines::Storage::Sql::ChatOfflineMessage.count(:id => 1)
       assert_equal 0, count
     end
