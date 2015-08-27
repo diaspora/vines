@@ -20,6 +20,10 @@ module SqlSchema
     }.strip).root
   end
 
+  def db_file
+    Rails.application.config.database_configuration["development"]["database"]
+  end
+
   def storage
     Vines::Storage::Sql.new
   end

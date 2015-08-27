@@ -27,7 +27,7 @@ end
 describe Vines::Storage::Sql do
   include SqlSchema
 
-  before do
+  def setup
     @test_user = {
       :name => "test",
       :url => "http://remote.host/",
@@ -37,6 +37,8 @@ describe Vines::Storage::Sql do
       :password => "$2a$10$c2G6rHjGeamQIOFI0c1/b.4mvFBw4AfOtgVrAkO1QPMuAyporj5e6", # pppppp
       :token => "1234"
     }
+
+    return if File.exist?(db_file)
     # create sql schema
     storage && create_schema(:force => true)
 
@@ -76,11 +78,6 @@ describe Vines::Storage::Sql do
       :aspect_id => 1, # without_chat
       :contact_id => 1 # person
     ).save
-  end
-
-  after do
-    db = Rails.application.config.database_configuration["development"]["database"]
-    File.delete(db) if File.exist?(db)
   end
 
   def test_save_message
@@ -137,9 +134,11 @@ describe Vines::Storage::Sql do
 
       msgs = db.find_messages("someone@inthe.void")
       assert_equal 1, msgs.keys.count
-      assert_equal "someone@inthe.void", msgs[1][:to]
-      assert_equal @test_user[:jid], msgs[1][:from]
-      assert_equal "test", msgs[1][:message]
+      msgs.each {|key, msg|
+        assert_equal "someone@inthe.void", msg[:to]
+        assert_equal @test_user[:jid], msg[:from]
+        assert_equal "test", msg[:message]
+      }
     end
   end
 

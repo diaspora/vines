@@ -6,6 +6,14 @@ require 'ext/nokogiri'
 require 'minitest/autorun'
 require 'rails/all'
 
+# A simple hook allowing you to run a block of code after everything is done running
+# In this case we want to delete the old sqlite database in case we run rake-test twice
+Minitest.after_run {
+  db_file = "test.db"
+  File.delete(db_file) if File.exist?(db_file)
+  puts "After_run hook deleted #{db_file}"
+}
+
 class MiniTest::Spec
 
   # Build an <iq> xml node with the given attributes. This is useful as a
