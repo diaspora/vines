@@ -69,8 +69,8 @@ describe Vines::Storage::Sql do
       contacts_visible: true, order_id: nil
     ).save
     Vines::Storage::Sql::AspectMembership.new(
-      aspect_id: 1, # without_chat
-      contact_id: 1 # person
+      # without_chat
+      aspect_id: 1, contact_id: 1
     ).save
   end
 
@@ -127,9 +127,7 @@ describe Vines::Storage::Sql do
       assert_equal 0, db.find_messages("someone@inthe.void").keys.count
 
       Vines::Storage::Sql::ChatOfflineMessage.new(
-        from: @test_user[:jid],
-        to: "someone@inthe.void",
-        message: "test"
+        from: @test_user[:jid], to: "someone@inthe.void", message: "test"
       ).save
 
       msgs = db.find_messages("someone@inthe.void")
@@ -163,10 +161,7 @@ describe Vines::Storage::Sql do
       assert_equal 0, user.roster.length
 
       aspect = Vines::Storage::Sql::Aspect.where(:id => 1)
-      aspect.update_all(
-        name: "with_chat",
-        chat_enabled: true
-      )
+      aspect.update_all(name: "with_chat", chat_enabled: true)
       user = db.find_user(@test_user[:jid])
       assert_equal 1, user.roster.length
     end
@@ -175,10 +170,8 @@ describe Vines::Storage::Sql do
   def test_save_user
     fibered do
       db = storage
-      user = Vines::User.new(
-        jid: "test2@test.de",
-        name: "test2@test.de",
-        password: "secret")
+      user = Vines::User.new(jid: "test2@test.de",
+        name: "test2@test.de", password: "secret")
       db.save_user(user)
       assert_nil db.find_user("test2@test.de")
     end
