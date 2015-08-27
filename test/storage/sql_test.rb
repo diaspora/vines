@@ -1,7 +1,7 @@
 # encoding: UTF-8
 
-require 'test_helper'
-require 'storage/sql_schema'
+require "test_helper"
+require "storage/sql_schema"
 
 module Diaspora
   class Application < Rails::Application
@@ -20,10 +20,10 @@ describe Vines::Storage::Sql do
   include SqlSchema
 
   def setup
-    config = Vines::Config.configure do
+    _config = Vines::Config.configure do
       max_offline_msgs 1
 
-      host 'wonderland.lit' do
+      host "wonderland.lit" do
         storage :fs do
           dir Dir.tmpdir
         end
@@ -31,22 +31,18 @@ describe Vines::Storage::Sql do
     end
 
     @test_user = {
-      :name => "test",
-      :url => "http://remote.host/",
-      :image_url => "http://path.to/image.png",
-      :jid => "test@local.host",
-      :email => "test@test.de",
-      :password => "$2a$10$c2G6rHjGeamQIOFI0c1/b.4mvFBw4AfOtgVrAkO1QPMuAyporj5e6", # pppppp
-      :token => "1234"
+      name: "test", url: "http://remote.host/",
+      image_url: "http://path.to/image.png", jid: "test@local.host", email: "test@test.de",
+      password: "$2a$10$c2G6rHjGeamQIOFI0c1/b.4mvFBw4AfOtgVrAkO1QPMuAyporj5e6", # pppppp
+      token: "1234"
     }
 
     return if File.exist?(db_file)
     # create sql schema
-    storage && create_schema(:force => true)
+    storage && create_schema(force: true)
 
     Vines::Storage::Sql::User.new(
-      username: @test_user[:name],
-      email: @test_user[:email],
+      username: @test_user[:name], email: @test_user[:email],
       encrypted_password: @test_user[:password],
       authentication_token: @test_user[:token]
     ).save
@@ -65,27 +61,23 @@ describe Vines::Storage::Sql do
       image_url: @test_user[:image_url]
     ).save
     Vines::Storage::Sql::Contact.new(
-      user_id: 1,
-      person_id: 1,
-      sharing: true,
-      receiving: true
+      user_id: 1, person_id: 1,
+      sharing: true, receiving: true
     ).save
     Vines::Storage::Sql::Aspect.new(
-      :user_id => 1,
-      :name => "without_chat",
-      :contacts_visible => true,
-      :order_id => nil
+      user_id: 1, name: "without_chat",
+      contacts_visible: true, order_id: nil
     ).save
     Vines::Storage::Sql::AspectMembership.new(
-      :aspect_id => 1, # without_chat
-      :contact_id => 1 # person
+      aspect_id: 1, # without_chat
+      contact_id: 1 # person
     ).save
   end
 
   after do
     # since we create the database once we
     # have to reset it after every test run
-    Vines::Storage::Sql::ChatOfflineMessage.all.each do |m|; m.destroy; end
+    Vines::Storage::Sql::ChatOfflineMessage.all.each(&:destroy)
   end
 
   def test_save_message
@@ -135,14 +127,14 @@ describe Vines::Storage::Sql do
       assert_equal 0, db.find_messages("someone@inthe.void").keys.count
 
       Vines::Storage::Sql::ChatOfflineMessage.new(
-        :from => @test_user[:jid],
-        :to => "someone@inthe.void",
-        :message => "test"
+        from: @test_user[:jid],
+        to: "someone@inthe.void",
+        message: "test"
       ).save
 
       msgs = db.find_messages("someone@inthe.void")
       assert_equal 1, msgs.keys.count
-      msgs.each {|key, msg|
+      msgs.each {|_, msg|
         assert_equal "someone@inthe.void", msg[:to]
         assert_equal @test_user[:jid], msg[:from]
         assert_equal "test", msg[:message]
@@ -154,14 +146,12 @@ describe Vines::Storage::Sql do
     fibered do
       db = storage
       Vines::Storage::Sql::ChatOfflineMessage.new(
-        :from => @test_user[:jid],
-        :to => "someone@inthe.void",
-        :message => "test"
+        from: @test_user[:jid], to: "someone@inthe.void", message: "test"
       ).save
       Vines::Storage::Sql::ChatOfflineMessage.all.each do |com|
         db.destroy_message(com.id)
       end
-      count = Vines::Storage::Sql::ChatOfflineMessage.count(:id => 1)
+      count = Vines::Storage::Sql::ChatOfflineMessage.count(id: 1)
       assert_equal 0, count
     end
   end
@@ -174,8 +164,8 @@ describe Vines::Storage::Sql do
 
       aspect = Vines::Storage::Sql::Aspect.where(:id => 1)
       aspect.update_all(
-        :name => "with_chat",
-        :chat_enabled => true
+        name: "with_chat",
+        chat_enabled: true
       )
       user = db.find_user(@test_user[:jid])
       assert_equal 1, user.roster.length
@@ -186,11 +176,11 @@ describe Vines::Storage::Sql do
     fibered do
       db = storage
       user = Vines::User.new(
-        jid: 'test2@test.de',
-        name: 'test2@test.de',
-        password: 'secret')
+        jid: "test2@test.de",
+        name: "test2@test.de",
+        password: "secret")
       db.save_user(user)
-      assert_nil db.find_user('test2@test.de')
+      assert_nil db.find_user("test2@test.de")
     end
   end
 
@@ -265,28 +255,28 @@ describe Vines::Storage::Sql do
 
     fibered do
       db = storage
-      root = Nokogiri::XML(%q{<characters xmlns="urn:wonderland"/>}).root
-      bad_name = Nokogiri::XML(%q{<not_characters xmlns="urn:wonderland"/>}).root
-      bad_ns = Nokogiri::XML(%q{<characters xmlns="not:wonderland"/>}).root
+      root = Nokogiri::XML(%(<characters xmlns="urn:wonderland"/>)).root
+      bad_name = Nokogiri::XML(%(<not_characters xmlns="urn:wonderland"/>)).root
+      bad_ns = Nokogiri::XML(%(<characters xmlns="not:wonderland"/>)).root
 
       node = db.find_fragment(nil, nil)
       assert_nil node
 
-      node = db.find_fragment('full@wonderland.lit', bad_name)
+      node = db.find_fragment("full@wonderland.lit", bad_name)
       assert_nil node
 
-      node = db.find_fragment('full@wonderland.lit', bad_ns)
+      node = db.find_fragment("full@wonderland.lit", bad_ns)
       assert_nil node
 
-      node = db.find_fragment('full@wonderland.lit', root)
+      node = db.find_fragment("full@wonderland.lit", root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
 
-      node = db.find_fragment(Vines::JID.new('full@wonderland.lit'), root)
+      node = db.find_fragment(Vines::JID.new("full@wonderland.lit"), root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
 
-      node = db.find_fragment(Vines::JID.new('full@wonderland.lit/resource'), root)
+      node = db.find_fragment(Vines::JID.new("full@wonderland.lit/resource"), root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
     end
@@ -297,9 +287,9 @@ describe Vines::Storage::Sql do
 
     fibered do
       db = storage
-      root = Nokogiri::XML(%q{<characters xmlns="urn:wonderland"/>}).root
-      db.save_fragment('test@test.de/resource1', fragment)
-      node = db.find_fragment('test@test.de', root)
+      root = Nokogiri::XML(%(<characters xmlns="urn:wonderland"/>)).root
+      db.save_fragment("test@test.de/resource1", fragment)
+      node = db.find_fragment("test@test.de", root)
       assert (node != nil), "node should include fragment"
       assert_equal fragment.to_s, node.to_s
     end

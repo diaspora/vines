@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'test_helper'
+require "test_helper"
 
 describe Vines::Stream::Server::Outbound::Start do
   before do
@@ -10,7 +10,7 @@ describe Vines::Stream::Server::Outbound::Start do
 
   def test_missing_namespace
     EM.run {
-      node = node('<stream:stream/>')
+      node = node("<stream:stream/>")
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
       EM.stop
     }
@@ -18,7 +18,7 @@ describe Vines::Stream::Server::Outbound::Start do
 
   def test_invalid_namespace
     EM.run {
-      node = node(%Q{<stream:stream xmlns="#{Vines::NAMESPACES[:stream]}"/>})
+      node = node(%(<stream:stream xmlns="#{Vines::NAMESPACES[:stream]}"/>))
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
       EM.stop
     }
@@ -26,7 +26,10 @@ describe Vines::Stream::Server::Outbound::Start do
 
   def test_valid_stream
     EM.run {
-      node = node(%Q{<stream:stream xmlns='jabber:client' xmlns:stream='#{Vines::NAMESPACES[:stream]}' xml:lang='en' id='1234' from='host.com' version='1.0'>})
+      node = node(
+        %(<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" ) +
+        %(xml:lang="en" id="1234" from="host.com" version="1.0">)
+      )
       @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::Auth])
       @state.node(node)
       assert @stream.verify

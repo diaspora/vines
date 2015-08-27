@@ -19,7 +19,7 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_missing_namespace
     EM.run {
-      node = node('<stream:stream/>')
+      node = node("<stream:stream/>")
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
       EM.stop
     }
@@ -27,7 +27,7 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_invalid_namespace
     EM.run {
-      node = node(%Q{<stream:stream xmlns="#{Vines::NAMESPACES[:stream]}"/>})
+      node = node(%(<stream:stream xmlns="#{Vines::NAMESPACES[:stream]}"/>))
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
       EM.stop
     }
@@ -35,8 +35,15 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream_tls_required
     EM.run {
-      node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-      features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"/><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+      node = node(
+        %(<stream:stream xmlns="jabber:client" ) +
+        %(xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>)
+      )
+      features = node(
+        %(<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}">) +
+        %(<starttls xmlns="#{Vines::NAMESPACES[:tls]}"/>) +
+        %(<dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>)
+      )
       @stream.expect(:start, nil, [node])
       @stream.expect(:vhost, VhostWrapper.new(false))
       @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])
@@ -50,8 +57,14 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream_with_dialback_flag
     EM.run {
-      node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-      features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+      node = node(
+        %(<stream:stream xmlns="jabber:client" ) +
+        %(xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>)
+      )
+      features = node(
+        %(<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}">) +
+        %(<dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>)
+      )
       @stream.expect(:start, nil, [node])
       @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])
       @stream.expect(:dialback_retry?, true)
@@ -64,8 +77,15 @@ describe Vines::Stream::Server::AuthMethod do
 
   def test_valid_stream
     EM.run {
-      node = node(%Q{<stream:stream xmlns="jabber:client" xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>})
-      features = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+      node = node(
+        %(<stream:stream xmlns="jabber:client" ) +
+        %(xmlns:stream="#{Vines::NAMESPACES[:stream]}" to="host.com" version="1.0"/>)
+      )
+      features = node(
+        %(<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}">) +
+        %(<starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls>) +
+        %(<dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>)
+      )
       @stream.expect(:start, nil, [node])
       @stream.expect(:vhost, VhostWrapper.new(true))
       @stream.expect(:advance, nil, [Vines::Stream::Server::AuthMethod])

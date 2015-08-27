@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'test_helper'
+require "test_helper"
 
 class OperatorWrapper
   def <<(stream)
@@ -31,7 +31,7 @@ describe Vines::Stream::Server::Outbound::Auth do
 
   def test_missing_children
     EM.run {
-      node = node('<stream:features/>')
+      node = node("<stream:features/>")
       @stream.expect(:dialback_verify_key?, false)
       @stream.expect(:outbound_tls_required, nil, [Boolean])
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
@@ -42,7 +42,7 @@ describe Vines::Stream::Server::Outbound::Auth do
 
   def test_invalid_children
     EM.run {
-      node = node(%Q{<stream:features><message/></stream:features>})
+      node = node(%(<stream:features><message/></stream:features>))
       @stream.expect(:dialback_verify_key?, false)
       @stream.expect(:outbound_tls_required, nil, [Boolean])
       assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
@@ -53,8 +53,12 @@ describe Vines::Stream::Server::Outbound::Auth do
 
   def test_valid_stream_features
     EM.run {
-      node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
-      starttls = "<starttls xmlns='#{Vines::NAMESPACES[:tls]}'/>"
+      node = node(
+        %(<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}">) +
+        %(<starttls xmlns="#{Vines::NAMESPACES[:tls]}"><required/></starttls>) +
+        %(<dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>)
+      )
+      starttls = %(<starttls xmlns='#{Vines::NAMESPACES[:tls]}'/>)
       @stream.expect(:dialback_verify_key?, false)
       @stream.expect(:outbound_tls_required, nil, [Boolean])
       @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::TLSResult])
@@ -67,7 +71,10 @@ describe Vines::Stream::Server::Outbound::Auth do
 
   def test_dialback_feature_only
     EM.run {
-      node = node(%Q{<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}"><dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>})
+      node = node(
+        %(<stream:features xmlns:stream="#{Vines::NAMESPACES[:stream]}">) +
+        %(<dialback xmlns="#{Vines::NAMESPACES[:dialback]}"/></stream:features>)
+      )
       @stream.expect(:dialback_verify_key?, false)
       @stream.expect(:router, OperatorWrapper.new)
       @stream.expect(:domain, "local.host")
@@ -87,7 +94,7 @@ describe Vines::Stream::Server::Outbound::Auth do
 
   def test_dialback_verify_key
     EM.run {
-      node = node('<stream:stream/>')
+      node = node("<stream:stream/>")
       @stream.expect(:advance, nil, [Vines::Stream::Server::Outbound::Authoritative])
       @stream.expect(:dialback_verify_key?, true)
       @stream.expect(:callback!, nil)
