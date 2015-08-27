@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/Zauberstuhl/pronto.git
-  revision: 20ceefd17b5bee7f097112973e99615e3e52ad5f
+  revision: 292d8acf01c42d505cb4d4a456ba31a24a41afe0
   specs:
     pronto (0.4.2)
       gitlab (~> 3.4.0)
