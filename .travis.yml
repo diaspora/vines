@@ -1,10 +1,12 @@
 language: ruby
+git:
+  depth: 999
 before_script:
 - export RAILS_ENV=development
 - export GITHUB_SLUG=diaspora/vines
 - export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
 script:
-- bundle exec pronto run -f github_pr -c origin/develop
+- bundle exec pronto run -f github_pr -c develop
 - bundle exec rake test
 rvm:
 - 2.0.0
