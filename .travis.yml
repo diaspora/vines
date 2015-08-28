@@ -6,7 +6,7 @@ before_script:
 - export GITHUB_SLUG=diaspora/vines
 - export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
 script:
-- bundle exec pronto run -f github_pr -c develop
+- bundle exec pronto run -f github_pr -c origin/develop || true
 - bundle exec rake test
 rvm:
 - 2.0.0
