@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'bcrypt', '~> 3.1'
   s.add_dependency 'em-hiredis', '~> 0.3.0'
-  s.add_dependency 'eventmachine', '>= 1.0.5', '< 1.1'
+  s.add_dependency 'eventmachine', '~> 1.0.8'
   s.add_dependency 'http_parser.rb', '~> 0.6'
   s.add_dependency 'nokogiri', '~> 1.6'
   s.add_dependency 'activerecord', '~> 4.1'

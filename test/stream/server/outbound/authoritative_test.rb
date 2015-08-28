@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'test_helper'
+require "test_helper"
 
 class RouterWrapper
   def initialize(stream); @stream = stream; end
@@ -15,47 +15,67 @@ describe Vines::Stream::Server::Outbound::Authoritative do
   end
 
   def test_invalid_stanza
-    node = node('<message/>')
-    @stream.expect(:router, @router)
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-    assert @stream.verify
+    EM.run {
+      node = node("<message/>")
+      @stream.expect(:router, @router)
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   def test_invalid_token
-    node = node('<db:verify/>')
-    router = RouterWrapper.new(nil)
-    @stream.expect(:router, router)
-    assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
-    assert @stream.verify
+    EM.run {
+      node = node("<db:verify/>")
+      router = RouterWrapper.new(nil)
+      @stream.expect(:router, router)
+      assert_raises(Vines::StreamErrors::NotAuthorized) { @state.node(node) }
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   def test_valid_verification
-    node = node(%Q{<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="remote.host" to="local.host" id="1234" type="valid"/>})
-    result = "<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>"
-    @stream.expect(:router, @router)
-    # NOTE this tests the 'inbound' stream var
-    @stream.expect(:write, nil, [result])
-    @stream.expect(:advance, nil, [Vines::Stream::Server::Ready])
-    @stream.expect(:notify_connected, nil)
-    # end
-    @stream.expect(:nil?, false)
-    @stream.expect(:close_connection, nil)
-    @state.node(node)
-    assert @stream.verify
+    EM.run {
+      node = node(
+        %(<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" ) +
+        %(from="remote.host" to="local.host" id="1234" type="valid"/>)
+      )
+      result = %(<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' ) +
+        %(from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>)
+      @stream.expect(:router, @router)
+      # NOTE this tests the "inbound" stream var
+      @stream.expect(:write, nil, [result])
+      @stream.expect(:advance, nil, [Vines::Stream::Server::Ready])
+      @stream.expect(:notify_connected, nil)
+      # end
+      @stream.expect(:nil?, false)
+      @stream.expect(:close_connection, nil)
+      @state.node(node)
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   def test_invalid_verification
-    node = node(%Q{<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" from="remote.host" to="local.host" id="1234" type="invalid"/>})
-    result = "<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>"
-    @stream.expect(:router, @router)
-    # NOTE this tests the 'inbound' stream var
-    @stream.expect(:close_connection_after_writing, nil)
-    @stream.expect(:write, nil, [result])
-    # end
-    @stream.expect(:nil?, false)
-    @stream.expect(:close_connection, nil)
-    @state.node(node)
-    assert @stream.verify
+    EM.run {
+      node = node(
+        %(<db:verify xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" ) +
+        %(from="remote.host" to="local.host" id="1234" type="invalid"/>)
+      )
+      result = %(<db:result xmlns:db='#{Vines::NAMESPACES[:legacy_dialback]}' ) +
+        %(from='#{node[:to]}' to='#{node[:from]}' type='#{node[:type]}'/>)
+      @stream.expect(:router, @router)
+      # NOTE this tests the "inbound" stream var
+      @stream.expect(:close_connection_after_writing, nil)
+      @stream.expect(:write, nil, [result])
+      # end
+      @stream.expect(:nil?, false)
+      @stream.expect(:close_connection, nil)
+      @state.node(node)
+      assert @stream.verify
+      EM.stop
+    }
   end
 
   private

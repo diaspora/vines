@@ -47,7 +47,7 @@ module Vines
 
           def dialback?(node)
             dialback = node.xpath('ns:dialback', 'ns' => NAMESPACES[:dialback]).any?
-            features?(node) && dialback
+            features?(node) && dialback && !tls_required?(node)
           end
 
           def tls?(node)
