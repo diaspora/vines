@@ -11,7 +11,7 @@ GIT
 PATH
   remote: .
   specs:
-    diaspora-vines (0.2.0.develop.2)
+    diaspora-vines (0.2.0.develop.3)
       activerecord (~> 4.1)
       bcrypt (~> 3.1)
       em-hiredis (~> 0.3.0)
