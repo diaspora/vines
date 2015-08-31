@@ -6,6 +6,7 @@ before_script:
 - export GITHUB_SLUG=${TRAVIS_REPO_SLUG}
 - export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
 - export PRONTO_FORMATTER=$([ "${GITHUB_ACCESS_TOKEN}" != "" ] && echo 'github_pr' || echo 'text')
+- echo $PRONTO_FORMATTER
 script:
 - bundle exec pronto run -f ${PRONTO_FORMATTER} -c ${TRAVIS_BRANCH}
 - bundle exec rake test
