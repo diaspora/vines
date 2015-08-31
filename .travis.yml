@@ -3,13 +3,15 @@ git:
   depth: 999
 before_script:
 - export RAILS_ENV=development
-- export GITHUB_SLUG=diaspora/vines
+- export GITHUB_SLUG=${TRAVIS_REPO_SLUG}
 - export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
+- export PRONTO_FORMATTER=$([ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo 'github_pr' || echo 'text')
 script:
-- bundle exec pronto run -f github_pr -c origin/develop || true
+- bundle exec pronto run -f ${PRONTO_FORMATTER} -c ${TRAVIS_BRANCH}
 - bundle exec rake test
 rvm:
 - 2.0.0
 - 1.9.3
 env:
-  secure: Ce5gbamvAI9gj3DDeb9Uq73XZxqxWmuEjtD6xL9Tlqgt8MaiS73lmUEecLvxI1sd1eEB57regNh+ciI4kgPswHQtfNx2Cr3G1s3AXu3zUHIHUJg4zoLH+nKX7ew68K4z2PDyy5iBs6tOWXMYWPkpwOneYmuF5O/NhE8ZuX+iSqk=
+  global:
+    secure: Ce5gbamvAI9gj3DDeb9Uq73XZxqxWmuEjtD6xL9Tlqgt8MaiS73lmUEecLvxI1sd1eEB57regNh+ciI4kgPswHQtfNx2Cr3G1s3AXu3zUHIHUJg4zoLH+nKX7ew68K4z2PDyy5iBs6tOWXMYWPkpwOneYmuF5O/NhE8ZuX+iSqk=
