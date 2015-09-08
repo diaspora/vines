@@ -40,21 +40,8 @@ module Vines
               stream.close_connection_after_writing
             end
           elsif dialback_result?(node)
-            begin
-              Vines::Stream::Server.start(stream.config, node[FROM], node[TO], true) do |authoritative|
-                if authoritative
-                  # will be closed in outbound/authoritative.rb
-                  authoritative.write("<db:verify from='#{node[TO]}' id='#{stream.id}' to='#{node[FROM]}'>#{node.text}</db:verify>")
-                end
-              end
-              # We need to be discoverable for the dialback connection
-              stream.router << stream
-            rescue StanzaErrors::RemoteServerNotFound => e
-              stream.write("<db:result from='#{node[TO]}' to='#{node[FROM]}' " \
-                           "type='error'><error type='cancel'><item-not-found " \
-                           "xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></db:result>")
-              stream.close_connection_after_writing
-            end
+            # open a new connection and verify the dialback key
+            stream.authoritative_dialback(node)
           else
             raise StreamErrors::NotAuthorized
           end

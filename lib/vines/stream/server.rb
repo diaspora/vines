@@ -7,7 +7,8 @@ module Vines
     # both accepting incoming s2s streams and initiating outbound s2s streams
     # to other servers.
     class Server < Stream
-      MECHANISMS = %w[EXTERNAL].freeze
+      MECHANISMS = %(EXTERNAL).freeze
+      FROM, TO = %(from to).map(&:freeze)
 
       # Starts the connection to the remote server. When the stream is
       # connected and ready to send stanzas it will yield to the callback
@@ -138,6 +139,24 @@ module Vines
 
       def ready?
         state.class == Server::Ready
+      end
+
+      def authoritative_dialback(node)
+        stream = self
+        Server.start(stream.config, node[FROM], node[TO], true) do |authoritative|
+          if authoritative
+            # will be closed in outbound/authoritative.rb
+            authoritative.write("<db:verify from='#{node[TO]}' id='#{stream.id}' " \
+                                "to='#{node[FROM]}'>#{node.text}</db:verify>")
+          end
+        end
+        # We need to be discoverable for the dialback connection
+        router << stream
+      rescue StanzaErrors::RemoteServerNotFound => e
+        write("<db:result from='#{node[TO]}' to='#{node[FROM]}' " \
+              "type='error'><error type='cancel'><item-not-found " \
+              "xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></db:result>")
+        close_connection_after_writing
       end
 
       def start(node)
