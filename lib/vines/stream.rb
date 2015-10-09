@@ -31,8 +31,11 @@ module Vines
       @nodes = EM::Queue.new
       process_node_queue
       create_parser
-      log.info { "%s %21s -> %s" %
-        ['Stream connected:'.ljust(PAD), @remote_addr, @local_addr] }
+      log.info {
+        "(%s) %s %21s -> %s" % [
+          id[-12..-1], "Stream connected:".ljust(PAD), @remote_addr, @local_addr
+        ]
+      }
     end
 
     # Initialize a new XML parser for this connection. This is called when the
@@ -162,8 +165,11 @@ module Vines
 
     def unbind
       router.delete(self)
-      log.info { "%s %21s -> %s" %
-        ['Stream disconnected:'.ljust(PAD), @remote_addr, @local_addr] }
+      log.info {
+        "(%s) %s %21s -> %s" % [
+          id[-12..-1], "Stream disconnected:".ljust(PAD), @remote_addr, @local_addr
+        ]
+      }
       log.info { "Streams connected: #{router.size}" }
     end
 
@@ -284,8 +290,8 @@ module Vines
       from, to = @remote_addr, @local_addr
       from, to = to, from if direction == :out
       label = (direction == :out) ? 'Sent' : 'Received'
-      log.debug("%s %21s -> %s\n%s\n" %
-        ["#{label} stanza:".ljust(PAD), from, to, node])
+      log.debug("(%s) %s %21s -> %s\n%s\n" %
+        [id[-12..-1], "#{label} stanza:".ljust(PAD), from, to, node])
     end
 
     # Determine if this is a valid domain-only JID that can be used in
