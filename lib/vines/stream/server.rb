@@ -7,7 +7,7 @@ module Vines
     # both accepting incoming s2s streams and initiating outbound s2s streams
     # to other servers.
     class Server < Stream
-      MECHANISMS, FROM, TO = ['EXTERNAL', 'from', 'to'].map(&:freeze)
+      MECHANISMS, FROM, TO = %w(EXTERNAL from to).map(&:freeze)
 
       # Starts the connection to the remote server. When the stream is
       # connected and ready to send stanzas it will yield to the callback
@@ -151,7 +151,7 @@ module Vines
         end
         # We need to be discoverable for the dialback connection
         router << stream
-      rescue StanzaErrors::RemoteServerNotFound => e
+      rescue StanzaErrors::RemoteServerNotFound
         write("<db:result from='#{node[TO]}' to='#{node[FROM]}' " \
               "type='error'><error type='cancel'><item-not-found " \
               "xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/></error></db:result>")
