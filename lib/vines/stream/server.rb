@@ -7,8 +7,7 @@ module Vines
     # both accepting incoming s2s streams and initiating outbound s2s streams
     # to other servers.
     class Server < Stream
-      MECHANISMS = %(EXTERNAL).freeze
-      FROM, TO = %(from to).map(&:freeze)
+      MECHANISMS, FROM, TO = ['EXTERNAL', 'from', 'to'].map(&:freeze)
 
       # Starts the connection to the remote server. When the stream is
       # connected and ready to send stanzas it will yield to the callback
