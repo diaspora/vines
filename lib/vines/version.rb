@@ -2,5 +2,5 @@
 
 module Vines
   # vines forked version 0.4.10
-  VERSION = '0.2.0.develop.3'
+  VERSION = '0.2.0.develop.4'
 end
