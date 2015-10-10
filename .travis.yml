@@ -7,7 +7,7 @@ before_script:
 - export PULL_REQUEST_ID=${TRAVIS_PULL_REQUEST}
 - export PRONTO_FORMATTER=$([ "${TRAVIS_PULL_REQUEST}" = "false" ] && echo 'github_pr' || echo 'text')
 script:
-- bundle exec pronto run -f ${PRONTO_FORMATTER} -c ${TRAVIS_BRANCH}
+- bundle exec pronto run -f ${PRONTO_FORMATTER} -c ${TRAVIS_BRANCH} --exit-code=true
 - bundle exec rake test
 rvm:
 - 2.0.0
