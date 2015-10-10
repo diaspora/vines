@@ -101,6 +101,7 @@ describe Vines::Stream::Server::AuthMethod do
         %(<db:result xmlns:db="#{Vines::NAMESPACES[:legacy_dialback]}" ) +
         %(from="#{@result[:from]}" to="#{@result[:to]}">#{@result[:token]}</db:result>)
       )
+      @stream.expect(:authoritative_dialback, nil, [node])
       assert_nothing_raised {
         @state.node(node)
       }.must_equal(true)
