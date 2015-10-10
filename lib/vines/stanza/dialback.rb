@@ -21,6 +21,7 @@ module Vines
         secret = outbound_stream.state.dialback_secret
         type = Kit.dialback_key(secret, from, to, id) == key ? VALID_TYPE : INVALID_TYPE
         @stream.write(%Q{<db:verify from="#{to}" to="#{from}" id="#{id}" type="#{type}"/>})
+        @stream.close_connection_after_writing
       end
     end
   end
