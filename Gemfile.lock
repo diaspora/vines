@@ -11,7 +11,7 @@ GIT
 PATH
   remote: .
   specs:
-    diaspora-vines (0.2.0.develop.3)
+    diaspora-vines (0.2.0.develop.4)
       activerecord (~> 4.1)
       bcrypt (~> 3.1)
       em-hiredis (~> 0.3.0)
@@ -68,7 +68,7 @@ GEM
       eventmachine (~> 1.0)
       hiredis (~> 0.5.0)
     erubis (2.7.0)
-    eventmachine (1.0.8)
+    eventmachine (1.0.9.1)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     gitlab (3.4.0)
