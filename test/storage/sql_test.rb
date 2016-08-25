@@ -149,7 +149,7 @@ describe Vines::Storage::Sql do
       Vines::Storage::Sql::ChatOfflineMessage.all.each do |com|
         db.destroy_message(com.id)
       end
-      count = Vines::Storage::Sql::ChatOfflineMessage.count(id: 1)
+      count = Vines::Storage::Sql::ChatOfflineMessage.where(id: 1).count
       assert_equal 0, count
     end
   end
